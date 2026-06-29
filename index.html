@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Terminal Challenge — Master Linux commands, find hidden passwords in Bandit challenges, and capture flags in CTF network challenges. 150+ interactive challenges with a built-in terminal.">
+  <title>Terminal Challenge — Command, Bandit & CTF</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <!-- ====== SIDEBAR ====== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">Terminal Challenge</div>
+        <div class="sidebar-subtitle">Hack • Learn • Conquer</div>
+      </div>
+
+      <!-- Player Stats -->
+      <div class="player-stats">
+        <div class="stat-box">
+          <div class="stat-value" id="stat-xp">0</div>
+          <div class="stat-label">XP</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-solved">0</div>
+          <div class="stat-label">Solved</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-streak">0</div>
+          <div class="stat-label">Streak</div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar-container">
+        <div class="progress-label">
+          <span>Overall Progress</span>
+          <span id="progress-text">0 / 150</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="category-tabs">
+        <button class="category-tab active" data-category="command" id="tab-command" onclick="switchCategory('command')">
+          <span class="tab-icon">⌨️</span>
+          Command
+        </button>
+        <button class="category-tab" data-category="bandit" id="tab-bandit" onclick="switchCategory('bandit')">
+          <span class="tab-icon">🔓</span>
+          Bandit
+        </button>
+        <button class="category-tab" data-category="ctf" id="tab-ctf" onclick="switchCategory('ctf')">
+          <span class="tab-icon">🚩</span>
+          CTF
+        </button>
+      </div>
+
+      <!-- Challenge List -->
+      <div class="challenge-list-container" id="challenge-list">
+        <!-- Populated by JS -->
+      </div>
+    </aside>
+
+    <!-- ====== MAIN CONTENT ====== -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="main-header" id="main-header">
+        <span class="header-category" id="header-category">Command Challenge</span>
+        <span class="header-separator">›</span>
+        <span class="header-challenge-title" id="header-title">Select a challenge</span>
+        <div class="header-right">
+          <span class="difficulty-badge" id="header-difficulty" style="display:none">Easy</span>
+          <span class="xp-badge" id="header-xp" style="display:none">+10 XP</span>
+        </div>
+      </header>
+
+      <!-- Challenge Panel -->
+      <div class="challenge-panel" id="challenge-panel">
+        <!-- Welcome Screen (default) -->
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-icon">🖥️</div>
+          <h1 class="welcome-title">Terminal Challenge</h1>
+          <p class="welcome-subtitle">
+            Master Linux commands, crack hidden passwords, and capture flags in this immersive cybersecurity challenge platform. Select a category and challenge from the sidebar to begin.
+          </p>
+          <div class="welcome-stats">
+            <div class="welcome-stat">
+              <div class="welcome-stat-value" style="color: var(--neon-green)">60</div>
+              <div class="welcome-stat-label">Command Challenges</div>
+            </div>
+            <div class="welcome-stat">
+              <div class="welcome-stat-value" style="color: var(--neon-cyan)">50</div>
+              <div class="welcome-stat-label">Bandit Challenges</div>
+            </div>
+            <div class="welcome-stat">
+              <div class="welcome-stat-value" style="color: var(--neon-magenta)">40</div>
+              <div class="welcome-stat-label">CTF Challenges</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Challenge Info (hidden by default) -->
+        <div class="challenge-info" id="challenge-info" style="display: none;">
+          <p class="challenge-description" id="challenge-desc"></p>
+          <div class="challenge-objective">
+            <span class="objective-icon">🎯</span>
+            <span id="challenge-obj"></span>
+          </div>
+          <div id="hint-area"></div>
+          <div id="solution-area"></div>
+        </div>
+
+        <!-- Action Buttons (hidden by default) -->
+        <div class="challenge-actions" id="challenge-actions" style="display: none;">
+          <button class="btn btn-hint" id="btn-hint" onclick="showHint()">
+            <span>💡</span> Hint
+          </button>
+          <button class="btn btn-solution" id="btn-solution" onclick="showSolution()">
+            <span>🔑</span> Solution
+          </button>
+          <button class="btn btn-reset" id="btn-reset" onclick="resetChallenge()">
+            <span>🔄</span> Reset
+          </button>
+          <button class="btn btn-next" id="btn-next" onclick="nextChallenge()" style="display: none;">
+            <span>➡️</span> Next
+          </button>
+        </div>
+
+        <!-- Bandit Password Submission (hidden by default) -->
+        <div class="password-submit-panel" id="password-panel" style="display: none;">
+          <div class="password-panel-header">
+            <span class="password-panel-icon">🔐</span>
+            <span class="password-panel-title">Submit Password</span>
+            <span class="password-panel-hint">Use the terminal to explore files and find the hidden password, then enter it below.</span>
+          </div>
+          <div class="password-input-row">
+            <input
+              type="text"
+              class="password-input"
+              id="password-input"
+              placeholder="Enter the password you found..."
+              autocomplete="off"
+              spellcheck="false"
+            >
+            <button class="btn btn-submit-password" id="btn-submit-password" onclick="submitPassword()">
+              <span>🔓</span> Submit
+            </button>
+          </div>
+          <div class="password-feedback" id="password-feedback"></div>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="terminal-container" id="terminal-container">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+          </div>
+          <div class="terminal-title" id="terminal-title">terminal@challenge:~$</div>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <div class="terminal-line system-line">Welcome to Terminal Challenge v1.0</div>
+          <div class="terminal-line info-line">Type 'help' for available commands.</div>
+          <div class="terminal-line" style="color: var(--text-muted);">Select a challenge from the sidebar to begin.</div>
+        </div>
+        <div class="terminal-input-line">
+          <span class="terminal-input-prompt" id="terminal-prompt">
+            <span class="terminal-prompt-user">user</span><span class="terminal-prompt-at">@</span><span class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~</span><span class="terminal-prompt-dollar">$ </span>
+          </span>
+          <input
+            type="text"
+            class="terminal-input"
+            id="terminal-input"
+            placeholder="Type your command here..."
+            autocomplete="off"
+            spellcheck="false"
+            autofocus
+          >
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Success Overlay -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-card">
+      <div class="success-icon" id="success-icon">🎉</div>
+      <div class="success-title" id="success-title">Challenge Complete!</div>
+      <div class="success-message" id="success-message">Great work!</div>
+      <div class="success-xp" id="success-xp">+10 XP</div>
+      <button class="success-btn" onclick="closeSuccess()">Continue</button>
+    </div>
+  </div>
+
+  <!-- Mobile Sidebar Backdrop -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+  <!-- Mobile Sidebar Toggle -->
+  <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <script src="challenges.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

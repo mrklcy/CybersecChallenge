@@ -1,0 +1,1076 @@
+// ============================================================================
+// TERMINAL CHALLENGE — Application Logic
+// ============================================================================
+
+// ---- State ----
+const state = {
+  currentCategory: 'command',
+  currentChallengeIndex: -1,
+  completedChallenges: new Set(),
+  totalXP: 0,
+  streak: 0,
+  commandHistory: [],
+  historyIndex: -1,
+  hintIndex: 0,
+  currentChallenge: null,
+};
+
+// ---- DOM References ----
+const DOM = {
+  challengeList: document.getElementById('challenge-list'),
+  challengePanel: document.getElementById('challenge-panel'),
+  welcomeScreen: document.getElementById('welcome-screen'),
+  challengeInfo: document.getElementById('challenge-info'),
+  challengeActions: document.getElementById('challenge-actions'),
+  challengeDesc: document.getElementById('challenge-desc'),
+  challengeObj: document.getElementById('challenge-obj'),
+  hintArea: document.getElementById('hint-area'),
+  solutionArea: document.getElementById('solution-area'),
+  terminalBody: document.getElementById('terminal-body'),
+  terminalInput: document.getElementById('terminal-input'),
+  terminalPrompt: document.getElementById('terminal-prompt'),
+  terminalTitle: document.getElementById('terminal-title'),
+  headerCategory: document.getElementById('header-category'),
+  headerTitle: document.getElementById('header-title'),
+  headerDifficulty: document.getElementById('header-difficulty'),
+  headerXP: document.getElementById('header-xp'),
+  statXP: document.getElementById('stat-xp'),
+  statSolved: document.getElementById('stat-solved'),
+  statStreak: document.getElementById('stat-streak'),
+  progressText: document.getElementById('progress-text'),
+  progressFill: document.getElementById('progress-fill'),
+  successOverlay: document.getElementById('success-overlay'),
+  successIcon: document.getElementById('success-icon'),
+  successTitle: document.getElementById('success-title'),
+  successMessage: document.getElementById('success-message'),
+  successXP: document.getElementById('success-xp'),
+  btnNext: document.getElementById('btn-next'),
+  btnHint: document.getElementById('btn-hint'),
+  sidebar: document.getElementById('sidebar'),
+  passwordPanel: document.getElementById('password-panel'),
+  passwordInput: document.getElementById('password-input'),
+  passwordFeedback: document.getElementById('password-feedback'),
+};
+
+// ---- Initialize ----
+function init() {
+  loadProgress();
+  renderChallengeList();
+  updateStats();
+  setupTerminal();
+  setupPasswordInput();
+}
+
+// ---- Category Switching ----
+function switchCategory(category) {
+  state.currentCategory = category;
+  state.currentChallengeIndex = -1;
+  state.currentChallenge = null;
+
+  // Update tabs
+  document.querySelectorAll('.category-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.category === category);
+  });
+
+  // Update header
+  DOM.headerCategory.textContent = CATEGORY_CONFIG[category].label;
+  DOM.headerCategory.style.color = CATEGORY_CONFIG[category].color;
+  DOM.headerTitle.textContent = 'Select a challenge';
+  DOM.headerDifficulty.style.display = 'none';
+  DOM.headerXP.style.display = 'none';
+
+  // Show welcome, hide challenge
+  DOM.welcomeScreen.style.display = 'flex';
+  DOM.challengeInfo.style.display = 'none';
+  DOM.challengeActions.style.display = 'none';
+  DOM.passwordPanel.style.display = 'none';
+
+  // Update terminal prompt
+  updatePrompt(category);
+
+  // Render list
+  renderChallengeList();
+
+  // Clear terminal
+  clearTerminal();
+  addTerminalLine(`Switched to ${CATEGORY_CONFIG[category].label}`, 'system-line');
+  addTerminalLine(CATEGORY_CONFIG[category].description, 'info-line');
+  addTerminalLine("Select a challenge from the sidebar to begin.", '');
+}
+
+// ---- Render Challenge List ----
+function renderChallengeList() {
+  const challenges = CHALLENGES[state.currentCategory];
+  const groups = { easy: [], medium: [], hard: [], expert: [] };
+
+  challenges.forEach((ch, index) => {
+    groups[ch.difficulty].push({ ...ch, index });
+  });
+
+  let html = '';
+  for (const [diff, items] of Object.entries(groups)) {
+    if (items.length === 0) continue;
+    const config = DIFFICULTY_CONFIG[diff];
+    html += `<div class="difficulty-group">`;
+    html += `<div class="difficulty-label ${diff}">${config.icon} ${config.label} (${items.length})</div>`;
+    items.forEach(ch => {
+      const isCompleted = state.completedChallenges.has(ch.id);
+      const isActive = ch.index === state.currentChallengeIndex;
+      const isLocked = isChallengeLocked(ch.index);
+      let cls = 'challenge-item';
+      if (isActive) cls += ' active';
+      if (isCompleted) cls += ' completed';
+      if (isLocked) cls += ' locked';
+      html += `<div class="${cls}" onclick="selectChallenge(${ch.index})" title="${ch.title}">
+        <span class="challenge-num">${String(ch.index + 1).padStart(2, '0')}</span>
+        <span class="challenge-title">${ch.title}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  DOM.challengeList.innerHTML = html;
+}
+
+// ---- Challenge Locking ----
+function isChallengeLocked(index) {
+  if (index === 0) return false;
+  const challenges = CHALLENGES[state.currentCategory];
+  // First challenge of each difficulty group is unlocked
+  const currentDiff = challenges[index].difficulty;
+  const firstOfDiff = challenges.findIndex(c => c.difficulty === currentDiff);
+  if (index === firstOfDiff) return false;
+  // Otherwise, previous in same difficulty must be completed
+  const prevChallenge = challenges[index - 1];
+  if (prevChallenge && prevChallenge.difficulty === currentDiff) {
+    return !state.completedChallenges.has(prevChallenge.id);
+  }
+  return false;
+}
+
+// ---- Select Challenge ----
+function selectChallenge(index) {
+  const challenges = CHALLENGES[state.currentCategory];
+  if (index < 0 || index >= challenges.length) return;
+  if (isChallengeLocked(index)) return;
+
+  state.currentChallengeIndex = index;
+  state.currentChallenge = challenges[index];
+  state.hintIndex = 0;
+
+  const ch = state.currentChallenge;
+  const isCompleted = state.completedChallenges.has(ch.id);
+
+  // Update header
+  DOM.headerTitle.textContent = ch.title;
+  DOM.headerDifficulty.textContent = DIFFICULTY_CONFIG[ch.difficulty].label;
+  DOM.headerDifficulty.className = `difficulty-badge ${ch.difficulty}`;
+  DOM.headerDifficulty.style.display = '';
+  DOM.headerXP.textContent = `+${ch.xp} XP`;
+  DOM.headerXP.style.display = '';
+
+  // Show challenge info
+  DOM.welcomeScreen.style.display = 'none';
+  DOM.challengeInfo.style.display = '';
+  DOM.challengeInfo.className = 'challenge-info animate-fade-in';
+  DOM.challengeActions.style.display = 'flex';
+  DOM.challengeDesc.textContent = ch.description;
+  DOM.challengeObj.textContent = ch.objective;
+  DOM.hintArea.innerHTML = '';
+  DOM.solutionArea.innerHTML = '';
+
+  // Toggle next button
+  DOM.btnNext.style.display = isCompleted ? '' : 'none';
+  DOM.btnHint.style.display = isCompleted ? 'none' : '';
+
+  // Show/hide password panel for bandit
+  const isBandit = state.currentCategory === 'bandit';
+  DOM.passwordPanel.style.display = isBandit ? '' : 'none';
+  if (isBandit) {
+    DOM.passwordInput.value = '';
+    DOM.passwordFeedback.innerHTML = '';
+    DOM.passwordFeedback.className = 'password-feedback';
+    DOM.passwordPanel.classList.remove('completed');
+    if (isCompleted) {
+      DOM.passwordPanel.classList.add('completed');
+      DOM.passwordInput.disabled = true;
+      DOM.passwordFeedback.innerHTML = '✅ Password already submitted!';
+      DOM.passwordFeedback.className = 'password-feedback correct';
+    } else {
+      DOM.passwordInput.disabled = false;
+    }
+  }
+
+  // Update list
+  renderChallengeList();
+
+  // Clear terminal & show challenge intro
+  clearTerminal();
+  addTerminalLine(`── Challenge ${index + 1}: ${ch.title} ──`, 'info-line');
+  addTerminalLine(ch.description, '');
+  addTerminalLine('', '');
+
+  // For bandit challenges, show available files
+  if (isBandit && ch.filesystem) {
+    addTerminalLine('📁 Files in current directory:', 'system-line');
+    displayFilesystem(ch.filesystem, '');
+    addTerminalLine('', '');
+    addTerminalLine('🔐 Explore using commands below, then submit the password above.', 'warning-line');
+    addTerminalLine('   You can also type: submit <password>', 'warning-line');
+  }
+
+  // For CTF challenges, show instructions
+  if (state.currentCategory === 'ctf') {
+    addTerminalLine('🚩 Use ping and network commands to solve this challenge.', 'system-line');
+    addTerminalLine('', '');
+  }
+
+  if (!isBandit) {
+    addTerminalLine("Type your command below. Use 'hint' or 'solution' for help.", 'warning-line');
+  }
+
+  // Focus terminal
+  DOM.terminalInput.focus();
+}
+
+// ---- Display Virtual Filesystem ----
+function displayFilesystem(fs, prefix) {
+  for (const [name, value] of Object.entries(fs)) {
+    if (name.endsWith('/')) {
+      addTerminalLine(`${prefix}  📁 ${name}`, 'fs-output');
+      if (typeof value === 'object') {
+        displayFilesystem(value, prefix + '    ');
+      }
+    } else {
+      const icon = name.startsWith('.') ? '👁️' : '📄';
+      const cls = name.startsWith('.') ? 'fs-hidden' : 'fs-file';
+      addTerminalLine(`${prefix}  ${icon} <span class="${cls}">${name}</span>`, 'fs-output');
+    }
+  }
+}
+
+// ---- Terminal Setup ----
+function setupTerminal() {
+  DOM.terminalInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const cmd = DOM.terminalInput.value.trim();
+      if (cmd) {
+        processCommand(cmd);
+        state.commandHistory.push(cmd);
+        state.historyIndex = state.commandHistory.length;
+      }
+      DOM.terminalInput.value = '';
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (state.historyIndex > 0) {
+        state.historyIndex--;
+        DOM.terminalInput.value = state.commandHistory[state.historyIndex];
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (state.historyIndex < state.commandHistory.length - 1) {
+        state.historyIndex++;
+        DOM.terminalInput.value = state.commandHistory[state.historyIndex];
+      } else {
+        state.historyIndex = state.commandHistory.length;
+        DOM.terminalInput.value = '';
+      }
+    }
+  });
+}
+
+// ---- Process Command ----
+function processCommand(cmd) {
+  const promptLabel = getPromptText();
+  addTerminalLine(`<span class="terminal-prompt">${promptLabel}</span> ${escapeHtml(cmd)}`, 'input-line');
+
+  // Built-in commands
+  const lowerCmd = cmd.toLowerCase().trim();
+  if (lowerCmd === 'help') {
+    showHelp();
+    return;
+  }
+  if (lowerCmd === 'clear') {
+    clearTerminal();
+    return;
+  }
+  if (lowerCmd === 'hint') {
+    showHint();
+    return;
+  }
+  if (lowerCmd === 'solution') {
+    showSolution();
+    return;
+  }
+  if (lowerCmd === 'reset') {
+    resetChallenge();
+    return;
+  }
+  if (lowerCmd.startsWith('submit ')) {
+    const password = cmd.substring(7).trim();
+    if (state.currentCategory === 'bandit' && state.currentChallenge) {
+      submitPasswordFromTerminal(password);
+    } else {
+      addTerminalLine('⚠️ The submit command is only used in Bandit challenges.', 'warning-line');
+    }
+    return;
+  }
+  if (lowerCmd === 'next') {
+    nextChallenge();
+    return;
+  }
+
+  // No challenge selected
+  if (!state.currentChallenge) {
+    addTerminalLine('⚠️ No challenge selected. Pick one from the sidebar.', 'warning-line');
+    return;
+  }
+
+  // Already completed
+  if (state.completedChallenges.has(state.currentChallenge.id)) {
+    addTerminalLine('✅ This challenge is already completed! Use "next" to continue.', 'info-line');
+    return;
+  }
+
+  // Process based on category
+  const category = state.currentCategory;
+  if (category === 'command') {
+    processCommandChallenge(cmd);
+  } else if (category === 'bandit') {
+    processBanditChallenge(cmd);
+  } else if (category === 'ctf') {
+    processCTFChallenge(cmd);
+  }
+}
+
+// ---- Command Challenge Processing ----
+function processCommandChallenge(cmd) {
+  const ch = state.currentChallenge;
+  const normalizedCmd = normalizeCommand(cmd);
+  const isCorrect = ch.solutions.some(sol => normalizeCommand(sol) === normalizedCmd);
+
+  if (isCorrect) {
+    simulateCommandOutput(cmd);
+    completeChallenge();
+  } else {
+    // Check partial match for helpful feedback
+    const firstWord = cmd.split(' ')[0].toLowerCase();
+    const solutionFirstWords = ch.solutions.map(s => s.split(' ')[0].toLowerCase());
+
+    if (solutionFirstWords.includes(firstWord)) {
+      addTerminalLine(`⚠️ Right command, but check your arguments/flags.`, 'warning-line');
+    } else {
+      simulateCommandOutput(cmd);
+      addTerminalLine(`❌ That's not the expected command. Try again or type 'hint'.`, 'error-line');
+    }
+  }
+}
+
+// ---- Bandit Challenge Processing ----
+// In Bandit mode, commands only show output — the user must submit the password separately
+function processBanditChallenge(cmd) {
+  const ch = state.currentChallenge;
+
+  // Simulate filesystem commands (output only, no auto-complete)
+  if (ch.filesystem) {
+    simulateBanditCommand(cmd, ch);
+  } else {
+    addTerminalLine('No filesystem available for this challenge.', 'warning-line');
+  }
+
+  // Remind user to submit password
+  addTerminalLine('', '');
+  addTerminalLine('🔐 Found the password? Submit it using the panel above or type: submit <password>', 'system-line');
+}
+
+// ---- Submit Password (from the UI panel) ----
+function submitPassword() {
+  const input = DOM.passwordInput.value.trim();
+  if (!input) {
+    DOM.passwordFeedback.innerHTML = '⚠️ Please enter a password.';
+    DOM.passwordFeedback.className = 'password-feedback incorrect';
+    return;
+  }
+  checkBanditPassword(input);
+}
+
+// ---- Submit Password (from terminal command) ----
+function submitPasswordFromTerminal(password) {
+  if (!password) {
+    addTerminalLine('⚠️ Usage: submit <password>', 'warning-line');
+    return;
+  }
+  // Also update the password input field
+  DOM.passwordInput.value = password;
+  checkBanditPassword(password);
+}
+
+// ---- Check Bandit Password ----
+function checkBanditPassword(password) {
+  const ch = state.currentChallenge;
+  if (!ch || !ch.password) {
+    addTerminalLine('⚠️ No password to check for this challenge.', 'warning-line');
+    return;
+  }
+
+  if (state.completedChallenges.has(ch.id)) {
+    addTerminalLine('✅ Already completed!', 'info-line');
+    return;
+  }
+
+  const isCorrect = password === ch.password;
+
+  if (isCorrect) {
+    // Correct password!
+    DOM.passwordFeedback.innerHTML = '✅ Correct password! Challenge complete!';
+    DOM.passwordFeedback.className = 'password-feedback correct';
+    DOM.passwordPanel.classList.add('completed');
+    DOM.passwordInput.disabled = true;
+    addTerminalLine('', '');
+    addTerminalLine(`🔑 Password accepted: ${ch.password}`, 'success-line');
+    completeChallenge();
+  } else {
+    // Wrong password
+    DOM.passwordFeedback.innerHTML = `❌ Incorrect password. Keep searching!`;
+    DOM.passwordFeedback.className = 'password-feedback incorrect shake';
+    addTerminalLine(`❌ Wrong password: "${escapeHtml(password)}" — Try again.`, 'error-line');
+    // Remove shake after animation
+    setTimeout(() => {
+      DOM.passwordFeedback.classList.remove('shake');
+    }, 400);
+  }
+}
+
+// ---- Setup Password Input (Enter key) ----
+function setupPasswordInput() {
+  DOM.passwordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitPassword();
+    }
+  });
+}
+
+// ---- CTF Challenge Processing ----
+function processCTFChallenge(cmd) {
+  const ch = state.currentChallenge;
+  const normalizedCmd = normalizeCommand(cmd);
+
+  // Check if correct
+  const isCorrect = ch.solutions.some(sol => {
+    const normSol = normalizeCommand(sol);
+    return normalizedCmd === normSol || normalizedCmd.startsWith(normSol) || normSol.startsWith(normalizedCmd);
+  });
+
+  if (isCorrect) {
+    // Show simulated response
+    if (ch.simulatedResponse) {
+      const lines = ch.simulatedResponse.split('\n');
+      lines.forEach(line => {
+        if (line.includes('Flag:') || line.includes('CTF{')) {
+          addTerminalLine(line, 'success-line');
+        } else if (line.includes('✓') || line.includes('ALIVE')) {
+          addTerminalLine(line, 'info-line');
+        } else if (line.includes('⚠️') || line.includes('ALERT')) {
+          addTerminalLine(line, 'warning-line');
+        } else if (line.includes('timeout') || line.includes('Unreachable')) {
+          addTerminalLine(line, 'error-line');
+        } else {
+          addTerminalLine(line, 'output-line');
+        }
+      });
+    }
+    if (ch.flag) {
+      addTerminalLine(`\n🚩 FLAG: ${ch.flag}`, 'success-line');
+    }
+    completeChallenge();
+  } else {
+    // Partial simulation
+    if (cmd.toLowerCase().startsWith('ping')) {
+      simulatePing(cmd);
+    } else if (cmd.toLowerCase().startsWith('traceroute') || cmd.toLowerCase().startsWith('tracert')) {
+      addTerminalLine('traceroute: Running...', 'output-line');
+      addTerminalLine('Try the specific target from the challenge description.', 'warning-line');
+    } else {
+      addTerminalLine(`bash: command output simulated`, 'output-line');
+      addTerminalLine(`❌ Not quite right. Check the challenge requirements.`, 'error-line');
+    }
+  }
+}
+
+// ---- Simulate Bandit Commands ----
+function simulateBanditCommand(cmd, ch) {
+  const parts = cmd.trim().split(/\s+/);
+  const command = parts[0].toLowerCase();
+  const args = parts.slice(1).join(' ').replace(/['"]/g, '');
+  const fs = ch.filesystem;
+
+  if (command === 'ls') {
+    const target = args.replace('-la', '').replace('-al', '').replace('-a', '').replace('-l', '').trim() || '';
+    const dir = target ? navigateFS(fs, target) : fs;
+    if (dir && typeof dir === 'object') {
+      for (const [name, val] of Object.entries(dir)) {
+        if (name.endsWith('/') && (!args.includes('-a') && name.startsWith('.'))) continue;
+        if (typeof val === 'object' && name.endsWith('/')) {
+          addTerminalLine(`drwxr-xr-x  2 user user 4096  ${name}`, 'fs-output');
+        } else if (typeof val === 'string') {
+          const size = val.length;
+          const hidden = name.startsWith('.');
+          if (!hidden || args.includes('-a') || args.includes('-la') || args.includes('-al')) {
+            if (val.startsWith('[FILE]')) {
+              addTerminalLine(val.replace('[FILE] ', ''), 'output-line');
+            } else {
+              addTerminalLine(`-rw-r--r--  1 user user ${String(size).padStart(5)}  ${name}`, 'output-line');
+            }
+          }
+        }
+      }
+    } else {
+      addTerminalLine(`ls: cannot access '${target}': No such file or directory`, 'error-line');
+    }
+    return;
+  }
+
+  if (command === 'cat') {
+    const filePath = args.replace('./', '');
+    const content = findInFS(fs, filePath);
+    if (content !== null && typeof content === 'string') {
+      const lines = content.split('\n');
+      lines.forEach(line => {
+        if (line.includes(ch.password)) {
+          addTerminalLine(line, 'success-line');
+        } else {
+          addTerminalLine(line, 'output-line');
+        }
+      });
+    } else if (content !== null && typeof content === 'object') {
+      addTerminalLine(`cat: ${filePath}: Is a directory`, 'error-line');
+    } else {
+      addTerminalLine(`cat: ${filePath}: No such file or directory`, 'error-line');
+    }
+    return;
+  }
+
+  if (command === 'find') {
+    addTerminalLine(`Searching...`, 'output-line');
+    const results = flattenFS(fs, '.');
+    const sizeArg = cmd.match(/-size\s+(\d+)c/);
+    const nameArg = cmd.match(/-name\s+["']?([^"'\s]+)["']?/);
+    const emptyArg = cmd.includes('-empty');
+    const typeArg = cmd.match(/-type\s+(\w)/);
+
+    results.forEach(({ path, content, isDir }) => {
+      let show = true;
+      if (typeArg && typeArg[1] === 'f' && isDir) show = false;
+      if (typeArg && typeArg[1] === 'd' && !isDir) show = false;
+      if (nameArg && !path.match(new RegExp(nameArg[1].replace('*', '.*')))) show = false;
+      if (sizeArg && typeof content === 'string' && content.length !== parseInt(sizeArg[1])) show = false;
+      if (emptyArg && typeof content === 'string' && content.length > 0) show = false;
+      if (show) {
+        const cls = (typeof content === 'string' && content.includes(ch.password)) ? 'success-line' : 'output-line';
+        addTerminalLine(path, cls);
+      }
+    });
+    return;
+  }
+
+  if (command === 'grep') {
+    const grepMatch = cmd.match(/grep\s+(?:-\w+\s+)*["']?([^"'\s]+)["']?\s+(.+)/);
+    if (grepMatch) {
+      const pattern = grepMatch[1];
+      const file = grepMatch[2].trim();
+      const content = findInFS(fs, file);
+      if (content && typeof content === 'string') {
+        const lines = content.split('\n');
+        lines.forEach(line => {
+          if (line.toLowerCase().includes(pattern.toLowerCase())) {
+            addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
+          }
+        });
+      } else {
+        addTerminalLine(`grep: ${file}: No such file or directory`, 'error-line');
+      }
+    }
+    return;
+  }
+
+  if (command === 'file') {
+    const target = args.replace('./*', 'inhere/*').replace('*', '');
+    if (target.endsWith('/') || target.endsWith('/*') || target.includes('*')) {
+      const dirPath = target.replace('/*', '').replace('*', '') || '.';
+      const dir = navigateFS(fs, dirPath) || fs;
+      if (typeof dir === 'object') {
+        for (const [name, val] of Object.entries(dir)) {
+          if (typeof val === 'string') {
+            if (val.startsWith('\x00') || val.startsWith('\x7f') || val.startsWith('\x89') || val.startsWith('\xff') || val.startsWith('\x1f')) {
+              addTerminalLine(`${dirPath}/${name}: data`, 'output-line');
+            } else {
+              addTerminalLine(`${dirPath}/${name}: ASCII text`, 'success-line');
+            }
+          }
+        }
+      }
+    }
+    return;
+  }
+
+  if (command === 'strings') {
+    const content = findInFS(fs, args);
+    if (content && typeof content === 'string') {
+      const printable = content.replace(/[^\x20-\x7E\n]/g, '').split('\n').filter(l => l.length > 3);
+      printable.forEach(line => {
+        addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
+      });
+    }
+    return;
+  }
+
+  if (command === 'head' || command === 'tail') {
+    const numMatch = cmd.match(/-(?:n\s+)?(\d+)/);
+    const num = numMatch ? parseInt(numMatch[1]) : 10;
+    const fileName = parts[parts.length - 1];
+    const content = findInFS(fs, fileName);
+    if (content && typeof content === 'string') {
+      const lines = content.split('\n');
+      const selected = command === 'head' ? lines.slice(0, num) : lines.slice(-num);
+      selected.forEach(line => {
+        addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
+      });
+    }
+    return;
+  }
+
+  if (command === 'base64') {
+    if (args.includes('-d') || args.includes('--decode')) {
+      const fileName = parts[parts.length - 1];
+      const content = findInFS(fs, fileName);
+      if (content) {
+        try {
+          const decoded = atob(content.trim());
+          addTerminalLine(decoded, decoded.includes(ch.password) ? 'success-line' : 'output-line');
+        } catch {
+          addTerminalLine(ch.password || 'Decoded content', 'success-line');
+        }
+      }
+    }
+    return;
+  }
+
+  if (command === 'xxd') {
+    if (args.includes('-r')) {
+      addTerminalLine(ch.password || 'Decoded content', 'success-line');
+    } else {
+      const fileName = parts[parts.length - 1];
+      const content = findInFS(fs, fileName);
+      if (content) {
+        addTerminalLine(content, 'output-line');
+      }
+    }
+    return;
+  }
+
+  if (command === 'sort') {
+    const fileName = parts[parts.length - 1];
+    const content = findInFS(fs, fileName);
+    if (content && typeof content === 'string') {
+      let lines = content.split('\n').sort();
+      if (args.includes('-u')) {
+        lines = [...new Set(lines)];
+      }
+      lines.forEach(line => {
+        addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
+      });
+      if (cmd.includes('| uniq -u')) {
+        const counts = {};
+        content.split('\n').forEach(l => counts[l] = (counts[l] || 0) + 1);
+        const unique = Object.entries(counts).filter(([, c]) => c === 1).map(([l]) => l);
+        addTerminalLine('--- Unique lines ---', 'info-line');
+        unique.forEach(l => addTerminalLine(l, 'success-line'));
+      }
+    }
+    return;
+  }
+
+  if (command === 'rev') {
+    const fileName = parts[parts.length - 1];
+    const content = findInFS(fs, fileName);
+    if (content) {
+      const reversed = content.split('').reverse().join('');
+      addTerminalLine(reversed, 'success-line');
+    }
+    return;
+  }
+
+  if (command === 'stat') {
+    const results = flattenFS(fs, '.');
+    results.forEach(({ path, content }) => {
+      if (content && typeof content === 'string' && content.includes('[PERMS:') || content && typeof content === 'string' && content.includes('[MTIME:')) {
+        addTerminalLine(`${path}: ${content}`, 'output-line');
+      }
+    });
+    return;
+  }
+
+  if (command === 'echo') {
+    const output = args.replace(/^["']|["']$/g, '');
+    addTerminalLine(output, output.includes(ch.password) ? 'success-line' : 'output-line');
+    return;
+  }
+
+  if (command === 'sqlite3' || command === 'openssl' || command === 'dig' || command === 'nslookup' || command === 'zcat' || command === 'gunzip' || command === 'getfattr' || command === 'md5sum' || command === 'sha256sum' || command === 'printf') {
+    // Simulate by showing the password
+    addTerminalLine(`Output: ${ch.password}`, 'success-line');
+    return;
+  }
+
+  // Generic fallback
+  addTerminalLine(`Executing: ${cmd}`, 'output-line');
+}
+
+// ---- Simulate Ping ----
+function simulatePing(cmd) {
+  const ipMatch = cmd.match(/(\d+\.\d+\.\d+\.\d+)/);
+  const hostMatch = cmd.match(/ping\s+(?:-\w+\s+)*(?:-\w+\s+\S+\s+)*(\S+)/);
+  const target = ipMatch ? ipMatch[1] : (hostMatch ? hostMatch[1] : 'unknown');
+
+  addTerminalLine(`PING ${target} (${target}) 56(84) bytes of data.`, 'output-line');
+  addTerminalLine(`64 bytes from ${target}: icmp_seq=1 ttl=64 time=0.${Math.floor(Math.random() * 900 + 100)} ms`, 'output-line');
+  addTerminalLine(``, '');
+  addTerminalLine(`--- ${target} ping statistics ---`, 'output-line');
+  addTerminalLine(`1 packets transmitted, 1 received, 0% packet loss`, 'output-line');
+  addTerminalLine(``, '');
+  addTerminalLine(`❌ Correct target, but check the specific requirements.`, 'warning-line');
+}
+
+// ---- Filesystem Helpers ----
+function navigateFS(fs, path) {
+  const parts = path.replace(/^\.\//, '').split('/').filter(Boolean);
+  let current = fs;
+  for (const part of parts) {
+    if (current[part] !== undefined) {
+      current = current[part];
+    } else if (current[part + '/'] !== undefined) {
+      current = current[part + '/'];
+    } else {
+      return null;
+    }
+  }
+  return current;
+}
+
+function findInFS(fs, path) {
+  const cleanPath = path.replace(/^\.\//, '').replace(/['"]/g, '');
+  // Direct lookup
+  if (fs[cleanPath] !== undefined) return fs[cleanPath];
+  // Navigate path
+  return navigateFS(fs, cleanPath);
+}
+
+function flattenFS(fs, prefix) {
+  const results = [];
+  for (const [name, value] of Object.entries(fs)) {
+    const fullPath = prefix ? `${prefix}/${name.replace(/\/$/, '')}` : name.replace(/\/$/, '');
+    if (typeof value === 'object' && name.endsWith('/')) {
+      results.push({ path: fullPath, content: null, isDir: true });
+      results.push(...flattenFS(value, fullPath));
+    } else if (typeof value === 'object') {
+      results.push({ path: fullPath, content: null, isDir: true });
+      results.push(...flattenFS(value, fullPath));
+    } else {
+      results.push({ path: fullPath, content: value, isDir: false });
+    }
+  }
+  return results;
+}
+
+function getSimulatedOutput(cmd, ch) {
+  // Try to get the output from the command
+  const parts = cmd.trim().split(/\s+/);
+  const command = parts[0].toLowerCase();
+  if (command === 'cat') {
+    const filePath = parts.slice(1).join(' ').replace(/['"]/g, '').replace('./', '');
+    const content = findInFS(ch.filesystem, filePath);
+    return typeof content === 'string' ? content : '';
+  }
+  return '';
+}
+
+// ---- Simulate Generic Command Output ----
+function simulateCommandOutput(cmd) {
+  const parts = cmd.trim().split(/\s+/);
+  const command = parts[0].toLowerCase();
+
+  const outputs = {
+    'echo': () => parts.slice(1).join(' ').replace(/^["']|["']$/g, ''),
+    'ls': () => 'file1.txt  file2.txt  readme.txt  .hidden  script.sh',
+    'pwd': () => '/home/user/challenge',
+    'mkdir': () => '',
+    'cat': () => 'File contents displayed.',
+    'rm': () => '',
+    'cp': () => '',
+    'mv': () => '',
+    'touch': () => '',
+    'head': () => 'Line 1\nLine 2\nLine 3\nLine 4\nLine 5',
+    'tail': () => 'Line 96\nLine 97\nLine 98\nLine 99\nLine 100',
+    'date': () => new Date().toString(),
+    'whoami': () => 'user',
+    'clear': () => { clearTerminal(); return null; },
+    'find': () => './file1.txt\n./dir/file2.txt\n./dir/sub/file3.txt',
+    'wc': () => '42 data.log',
+    'grep': () => 'Matching lines found.',
+    'df': () => 'Filesystem  Size  Used  Avail  Use%  Mounted\n/dev/sda1   50G   25G   25G    50%  /',
+    'sort': () => 'Sorted output displayed.',
+    'uniq': () => 'Unique lines displayed.',
+    'file': () => 'mystery_file: ASCII text',
+    'chmod': () => '',
+    'ln': () => '',
+    'du': () => '4.0K\tfile1.txt\n8.0K\tfile2.txt',
+    'wget': () => 'Downloaded: file.txt [1024]',
+    'env': () => 'PATH=/usr/local/bin:/usr/bin\nHOME=/home/user\nSHELL=/bin/bash',
+    'man': () => 'Manual page displayed.',
+    'diff': () => '< old line\n> new line',
+    'kill': () => '',
+    'tar': () => 'Archive created.',
+    'ps': () => 'PID  %MEM  COMMAND\n1234  5.2  nginx\n5678  3.1  node',
+    'ss': () => 'tcp  LISTEN  0.0.0.0:22\ntcp  LISTEN  0.0.0.0:80',
+    'netstat': () => 'tcp  0.0.0.0:22  LISTEN\ntcp  0.0.0.0:80  LISTEN',
+    'gzip': () => 'File compressed.',
+    'sed': () => 'Substitution complete.',
+    'cut': () => 'Column extracted.',
+    'awk': () => 'Output processed.',
+    'top': () => 'System monitor active.',
+    'htop': () => 'System monitor active.',
+    'crontab': () => 'Cron jobs listed.',
+    'md5sum': () => 'Hash generated.',
+    'chown': () => 'Ownership changed.',
+    'nc': () => 'Connection established.',
+    'ssh': () => 'SSH tunnel created.',
+    'zgrep': () => 'Found in compressed file.',
+    'dpkg': () => 'Package list displayed.',
+  };
+
+  const fn = outputs[command];
+  if (fn) {
+    const result = fn();
+    if (result !== null && result !== undefined && result !== '') {
+      addTerminalLine(result, 'output-line');
+    }
+  }
+}
+
+// ---- Complete Challenge ----
+function completeChallenge() {
+  const ch = state.currentChallenge;
+  if (!ch || state.completedChallenges.has(ch.id)) return;
+
+  state.completedChallenges.add(ch.id);
+  state.totalXP += ch.xp;
+  state.streak++;
+
+  addTerminalLine('', '');
+  addTerminalLine(`✅ ${ch.successMessage}`, 'success-line');
+  addTerminalLine(`+${ch.xp} XP earned!`, 'success-line');
+
+  updateStats();
+  renderChallengeList();
+  saveProgress();
+
+  // Show success overlay
+  DOM.successIcon.textContent = '🎉';
+  DOM.successTitle.textContent = 'Challenge Complete!';
+  DOM.successMessage.textContent = ch.successMessage;
+  DOM.successXP.textContent = `+${ch.xp} XP`;
+  DOM.successOverlay.classList.add('show');
+
+  // Show next button
+  DOM.btnNext.style.display = '';
+  DOM.btnHint.style.display = 'none';
+}
+
+function closeSuccess() {
+  DOM.successOverlay.classList.remove('show');
+  DOM.terminalInput.focus();
+}
+
+// ---- Hint System ----
+function showHint() {
+  if (!state.currentChallenge) return;
+  const ch = state.currentChallenge;
+  if (state.completedChallenges.has(ch.id)) return;
+
+  if (state.hintIndex < ch.hints.length) {
+    const hint = ch.hints[state.hintIndex];
+    state.hintIndex++;
+
+    const hintHtml = `<div class="hint-display animate-fade-in">💡 Hint ${state.hintIndex}/${ch.hints.length}: ${hint}</div>`;
+    DOM.hintArea.innerHTML += hintHtml;
+
+    addTerminalLine(`💡 Hint: ${hint}`, 'warning-line');
+  } else {
+    addTerminalLine('No more hints available. Try "solution" to reveal the answer.', 'warning-line');
+  }
+}
+
+// ---- Solution System ----
+function showSolution() {
+  if (!state.currentChallenge) return;
+  const ch = state.currentChallenge;
+
+  const solution = ch.solutions[0];
+  let html = `<div class="solution-display animate-fade-in">🔑 Solution: <strong>${escapeHtml(solution)}</strong>`;
+  if (ch.password) {
+    html += `<br>🔓 Password: <strong>${escapeHtml(ch.password)}</strong>`;
+  }
+  if (ch.flag) {
+    html += `<br>🚩 Flag: <strong>${escapeHtml(ch.flag)}</strong>`;
+  }
+  html += `</div>`;
+  DOM.solutionArea.innerHTML = html;
+
+  addTerminalLine(`🔑 Solution: ${solution}`, 'error-line');
+  if (ch.password) {
+    addTerminalLine(`🔓 Password: ${ch.password}`, 'info-line');
+  }
+  if (ch.flag) {
+    addTerminalLine(`🚩 Flag: ${ch.flag}`, 'info-line');
+  }
+}
+
+// ---- Reset Challenge ----
+function resetChallenge() {
+  if (!state.currentChallenge) return;
+  state.hintIndex = 0;
+  DOM.hintArea.innerHTML = '';
+  DOM.solutionArea.innerHTML = '';
+  selectChallenge(state.currentChallengeIndex);
+  addTerminalLine('🔄 Challenge reset.', 'system-line');
+}
+
+// ---- Next Challenge ----
+function nextChallenge() {
+  const challenges = CHALLENGES[state.currentCategory];
+  const nextIndex = state.currentChallengeIndex + 1;
+  if (nextIndex < challenges.length) {
+    selectChallenge(nextIndex);
+  } else {
+    addTerminalLine('🏆 Congratulations! You\'ve completed all challenges in this category!', 'success-line');
+  }
+}
+
+// ---- Terminal Helpers ----
+function addTerminalLine(text, className) {
+  const line = document.createElement('div');
+  line.className = `terminal-line ${className}`;
+  line.innerHTML = text;
+  DOM.terminalBody.appendChild(line);
+  DOM.terminalBody.scrollTop = DOM.terminalBody.scrollHeight;
+}
+
+function clearTerminal() {
+  DOM.terminalBody.innerHTML = '';
+}
+
+function getPromptText() {
+  const cat = state.currentCategory;
+  const cfg = CATEGORY_CONFIG[cat];
+  const level = state.currentChallenge ? state.currentChallengeIndex + 1 : 0;
+  return `<span class="terminal-prompt-user">${cfg.terminalPrompt}</span><span class="terminal-prompt-at">@</span><span class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~/level${level}</span><span class="terminal-prompt-dollar">$</span>`;
+}
+
+function updatePrompt(category) {
+  const cfg = CATEGORY_CONFIG[category || state.currentCategory];
+  DOM.terminalTitle.textContent = `${cfg.terminalPrompt}@challenge:~$`;
+}
+
+function showHelp() {
+  addTerminalLine('╔══════════════════════════════════════╗', 'info-line');
+  addTerminalLine('║       Terminal Challenge Help         ║', 'info-line');
+  addTerminalLine('╠══════════════════════════════════════╣', 'info-line');
+  addTerminalLine('║  help     — Show this help message    ║', 'info-line');
+  addTerminalLine('║  clear    — Clear terminal screen     ║', 'info-line');
+  addTerminalLine('║  hint     — Get a hint for current    ║', 'info-line');
+  addTerminalLine('║  solution — Reveal the solution       ║', 'info-line');
+  addTerminalLine('║  reset    — Reset current challenge   ║', 'info-line');
+  addTerminalLine('╠══════════════════════════════════════╣', 'info-line');
+  addTerminalLine('║  ↑/↓     — Navigate command history   ║', 'info-line');
+  addTerminalLine('║  Enter   — Execute command             ║', 'info-line');
+  addTerminalLine('╚══════════════════════════════════════╝', 'info-line');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function normalizeCommand(cmd) {
+  return cmd.trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[""'']/g, '"')
+    .toLowerCase();
+}
+
+// ---- Stats ----
+function updateStats() {
+  const totalChallenges = CHALLENGES.command.length + CHALLENGES.bandit.length + CHALLENGES.ctf.length;
+  const solved = state.completedChallenges.size;
+
+  DOM.statXP.textContent = state.totalXP;
+  DOM.statSolved.textContent = solved;
+  DOM.statStreak.textContent = state.streak;
+  DOM.progressText.textContent = `${solved} / ${totalChallenges}`;
+  DOM.progressFill.style.width = `${(solved / totalChallenges) * 100}%`;
+}
+
+// ---- Persistence ----
+function saveProgress() {
+  const data = {
+    completed: [...state.completedChallenges],
+    xp: state.totalXP,
+    streak: state.streak,
+  };
+  try {
+    localStorage.setItem('terminal-challenge-progress', JSON.stringify(data));
+  } catch (e) {
+    // Ignore storage errors
+  }
+}
+
+function loadProgress() {
+  try {
+    const data = JSON.parse(localStorage.getItem('terminal-challenge-progress'));
+    if (data) {
+      state.completedChallenges = new Set(data.completed || []);
+      state.totalXP = data.xp || 0;
+      state.streak = data.streak || 0;
+    }
+  } catch (e) {
+    // Ignore
+  }
+}
+
+// ---- Mobile Sidebar Toggle ----
+function toggleSidebar() {
+  const isOpen = DOM.sidebar.classList.toggle('open');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (backdrop) {
+    if (isOpen) {
+      backdrop.style.display = 'block';
+      setTimeout(() => backdrop.classList.add('show'), 10);
+    } else {
+      backdrop.classList.remove('show');
+      setTimeout(() => backdrop.style.display = 'none', 300);
+    }
+  }
+}
+
+// ---- Init ----
+document.addEventListener('DOMContentLoaded', init);
+
+// Keep terminal focused
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.sidebar') && !e.target.closest('.btn') && !e.target.closest('.success-overlay') && !e.target.closest('.sidebar-backdrop')) {
+    DOM.terminalInput.focus();
+  }
+});
