@@ -1382,6 +1382,12 @@ document.addEventListener('DOMContentLoaded', init);
 
 // Keep terminal focused
 document.addEventListener('click', (e) => {
+  // If the user has selected text (like a password or flag), do not steal focus,
+  // as focusing the input would clear the active selection.
+  if (window.getSelection().toString() !== '') {
+    return;
+  }
+
   if (
     !e.target.closest('.sidebar') && 
     !e.target.closest('.btn') && 
