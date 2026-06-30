@@ -1343,11 +1343,11 @@ document.addEventListener('click', (e) => {
 let currentLeaderboardTab = 'all';
 
 const MOCK_RIVALS = [
-  { name: 'root_haxor', avatar: '💻', tag: 'rival', solved: { all: 135, command: 55, bandit: 45, ctf: 35 }, xp: { all: 2450, command: 780, bandit: 870, ctf: 800 } },
-  { name: 'net_viper', avatar: '🐍', tag: 'rival', solved: { all: 110, command: 40, bandit: 38, ctf: 32 }, xp: { all: 1820, command: 550, bandit: 620, ctf: 650 } },
-  { name: 'byte_bandit', avatar: '🦝', tag: 'rival', solved: { all: 92, command: 35, bandit: 42, ctf: 15 }, xp: { all: 1360, command: 480, bandit: 680, ctf: 200 } },
-  { name: 'cyber_phreak', avatar: '👾', tag: 'rival', solved: { all: 70, command: 25, bandit: 20, ctf: 25 }, xp: { all: 1040, command: 320, bandit: 300, ctf: 420 } },
-  { name: 'null_pointer', avatar: '🎯', tag: 'rival', solved: { all: 48, command: 22, bandit: 16, ctf: 10 }, xp: { all: 650, command: 280, bandit: 230, ctf: 140 } },
+  { name: 'root_haxor', avatar: '💻', tag: 'rival', solved: { all: 265, command: 92, bandit: 88, ctf: 85 }, xp: { all: 5800, command: 1800, bandit: 2000, ctf: 2000 } },
+  { name: 'net_viper', avatar: '🐍', tag: 'rival', solved: { all: 215, command: 75, bandit: 72, ctf: 68 }, xp: { all: 4500, command: 1400, bandit: 1550, ctf: 1550 } },
+  { name: 'byte_bandit', avatar: '🦝', tag: 'rival', solved: { all: 178, command: 62, bandit: 80, ctf: 36 }, xp: { all: 3600, command: 1100, bandit: 1800, ctf: 700 } },
+  { name: 'cyber_phreak', avatar: '👾', tag: 'rival', solved: { all: 138, command: 50, bandit: 42, ctf: 46 }, xp: { all: 2700, command: 850, bandit: 850, ctf: 1000 } },
+  { name: 'null_pointer', avatar: '🎯', tag: 'rival', solved: { all: 90, command: 38, bandit: 32, ctf: 20 }, xp: { all: 1600, command: 650, bandit: 550, ctf: 400 } },
 ];
 
 function switchLeaderboardTab(tab, event) {

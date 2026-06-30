@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Terminal Challenge — Master Linux commands, find hidden passwords in Bandit challenges, and capture flags in CTF network challenges. 150+ interactive challenges with a built-in terminal.">
+  <meta name="description"
+    content="Terminal Challenge — Master Linux commands, find hidden passwords in Bandit challenges, and capture flags in CTF network challenges. 150+ interactive challenges with a built-in terminal.">
   <title>Terminal Challenge — Command, Bandit & CTF</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
 </head>
+
 <body>
   <div id="app">
     <!-- ====== SIDEBAR ====== -->
@@ -47,7 +51,7 @@
       <div class="progress-bar-container">
         <div class="progress-label">
           <span>Overall Progress</span>
-          <span id="progress-text">0 / 150</span>
+          <span id="progress-text">0 / 300</span>
         </div>
         <div class="progress-bar">
           <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
@@ -56,7 +60,8 @@
 
       <!-- Category Tabs -->
       <div class="category-tabs">
-        <button class="category-tab active" data-category="command" id="tab-command" onclick="switchCategory('command')">
+        <button class="category-tab active" data-category="command" id="tab-command"
+          onclick="switchCategory('command')">
           <span class="tab-icon">⌨️</span>
           Command
         </button>
@@ -96,19 +101,20 @@
           <div class="welcome-icon">🖥️</div>
           <h1 class="welcome-title">Terminal Challenge</h1>
           <p class="welcome-subtitle">
-            Master Linux commands, crack hidden passwords, and capture flags in this immersive cybersecurity challenge platform. Select a category and challenge from the sidebar to begin.
+             Master Linux commands, crack hidden passwords, and capture flags in this immersive cybersecurity challenge
+             platform. Select a category and challenge from the sidebar to begin.
           </p>
           <div class="welcome-stats">
             <div class="welcome-stat">
-              <div class="welcome-stat-value" style="color: var(--neon-green)">60</div>
+              <div class="welcome-stat-value" style="color: var(--neon-green)">100</div>
               <div class="welcome-stat-label">Command Challenges</div>
             </div>
             <div class="welcome-stat">
-              <div class="welcome-stat-value" style="color: var(--neon-cyan)">50</div>
+              <div class="welcome-stat-value" style="color: var(--neon-cyan)">100</div>
               <div class="welcome-stat-label">Bandit Challenges</div>
             </div>
             <div class="welcome-stat">
-              <div class="welcome-stat-value" style="color: var(--neon-magenta)">40</div>
+              <div class="welcome-stat-value" style="color: var(--neon-magenta)">100</div>
               <div class="welcome-stat-label">CTF Challenges</div>
             </div>
           </div>
@@ -118,9 +124,12 @@
             <div class="leaderboard-header">
               <div class="leaderboard-title">🏆 Hacker Leaderboard</div>
               <div class="leaderboard-tabs">
-                <button class="leaderboard-tab active" data-tab="all" onclick="switchLeaderboardTab('all', event)">General</button>
-                <button class="leaderboard-tab" data-tab="command" onclick="switchLeaderboardTab('command', event)">Command</button>
-                <button class="leaderboard-tab" data-tab="bandit" onclick="switchLeaderboardTab('bandit', event)">Bandit</button>
+                <button class="leaderboard-tab active" data-tab="all"
+                  onclick="switchLeaderboardTab('all', event)">General</button>
+                <button class="leaderboard-tab" data-tab="command"
+                  onclick="switchLeaderboardTab('command', event)">Command</button>
+                <button class="leaderboard-tab" data-tab="bandit"
+                  onclick="switchLeaderboardTab('bandit', event)">Bandit</button>
                 <button class="leaderboard-tab" data-tab="ctf" onclick="switchLeaderboardTab('ctf', event)">CTF</button>
               </div>
             </div>
@@ -160,16 +169,11 @@
           <div class="unlock-card animate-fade-in">
             <div class="unlock-icon">🔐</div>
             <div class="unlock-title" id="unlock-title">Level Locked</div>
-            <div class="unlock-subtitle" id="unlock-subtitle">To access this level, you must enter the password found in the previous level.</div>
+            <div class="unlock-subtitle" id="unlock-subtitle">To access this level, you must enter the password found in
+              the previous level.</div>
             <div class="unlock-input-row">
-              <input
-                type="text"
-                class="unlock-password-input"
-                id="unlock-password-input"
-                placeholder="Enter password to unlock..."
-                autocomplete="off"
-                spellcheck="false"
-              >
+              <input type="text" class="unlock-password-input" id="unlock-password-input"
+                placeholder="Enter password to unlock..." autocomplete="off" spellcheck="false">
               <button class="btn btn-unlock-submit" id="btn-unlock-submit" onclick="submitUnlockPassword()">
                 <span>🔓</span> Unlock
               </button>
@@ -192,25 +196,21 @@
         <div class="terminal-body" id="terminal-body">
           <div class="terminal-line system-line">Welcome to Terminal Challenge v1.0</div>
           <div class="terminal-line info-line">Type 'help' for available commands.</div>
-          <div class="terminal-line" style="color: var(--text-muted);">Select a challenge from the sidebar to begin.</div>
+          <div class="terminal-line" style="color: var(--text-muted);">Select a challenge from the sidebar to begin.
+          </div>
         </div>
         <div class="terminal-input-line">
           <span class="terminal-input-prompt" id="terminal-prompt">
-            <span class="terminal-prompt-user">user</span><span class="terminal-prompt-at">@</span><span class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~</span><span class="terminal-prompt-dollar">$ </span>
+            <span class="terminal-prompt-user">user</span><span class="terminal-prompt-at">@</span><span
+              class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~</span><span
+              class="terminal-prompt-dollar">$ </span>
           </span>
-          <input
-            type="text"
-            class="terminal-input"
-            id="terminal-input"
-            placeholder="Type your command here..."
-            autocomplete="off"
-            spellcheck="false"
-            autofocus
-          >
+          <input type="text" class="terminal-input" id="terminal-input" placeholder="Type your command here..."
+            autocomplete="off" spellcheck="false" autofocus>
         </div>
       </div>
-    <!-- Mobile Sidebar Backdrop -->
-    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      <!-- Mobile Sidebar Backdrop -->
+      <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
   </div>
 
   <!-- Success Overlay -->
@@ -255,4 +255,5 @@
   <script src="challenges.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>

