@@ -13,6 +13,8 @@ const state = {
   historyIndex: -1,
   hintIndex: 0,
   currentChallenge: null,
+  currentUser: null, // null means Guest
+  currentAuthTab: 'signin',
 };
 
 // ---- DOM References ----
@@ -50,6 +52,18 @@ const DOM = {
   passwordPanel: document.getElementById('password-panel'),
   passwordInput: document.getElementById('password-input'),
   passwordFeedback: document.getElementById('password-feedback'),
+  profileWidget: document.getElementById('profile-widget'),
+  profileName: document.getElementById('profile-name'),
+  profileRank: document.getElementById('profile-rank'),
+  profileBtn: document.getElementById('profile-btn'),
+  authOverlay: document.getElementById('auth-overlay'),
+  authTabSignin: document.getElementById('auth-tab-signin'),
+  authTabRegister: document.getElementById('auth-tab-register'),
+  authForm: document.getElementById('auth-form'),
+  authUsername: document.getElementById('auth-username'),
+  authPassword: document.getElementById('auth-password'),
+  authError: document.getElementById('auth-error'),
+  authSubmitBtn: document.getElementById('auth-submit-btn'),
 };
 
 // ---- Initialize ----
@@ -231,6 +245,11 @@ function selectChallenge(index) {
 
   // Focus terminal
   DOM.terminalInput.focus();
+
+  // Close sidebar on mobile/tablet after selecting a challenge
+  if (DOM.sidebar && DOM.sidebar.classList.contains('open')) {
+    toggleSidebar();
+  }
 }
 
 // ---- Display Virtual Filesystem ----
@@ -1021,17 +1040,35 @@ function updateStats() {
   DOM.statStreak.textContent = state.streak;
   DOM.progressText.textContent = `${solved} / ${totalChallenges}`;
   DOM.progressFill.style.width = `${(solved / totalChallenges) * 100}%`;
+
+  updateProfileUI();
 }
 
 // ---- Persistence ----
 function saveProgress() {
-  const data = {
+  const progressData = {
     completed: [...state.completedChallenges],
     xp: state.totalXP,
     streak: state.streak,
   };
+
   try {
-    localStorage.setItem('terminal-challenge-progress', JSON.stringify(data));
+    if (state.currentUser) {
+      // Save to profile
+      const profiles = JSON.parse(localStorage.getItem('terminal-challenge-profiles') || '{}');
+      if (profiles[state.currentUser]) {
+        profiles[state.currentUser].completed = progressData.completed;
+        profiles[state.currentUser].xp = progressData.xp;
+        profiles[state.currentUser].streak = progressData.streak;
+        localStorage.setItem('terminal-challenge-profiles', JSON.stringify(profiles));
+      }
+      // Track active user
+      localStorage.setItem('terminal-challenge-active-user', state.currentUser);
+    } else {
+      // Save to Guest progress
+      localStorage.setItem('terminal-challenge-progress', JSON.stringify(progressData));
+      localStorage.removeItem('terminal-challenge-active-user');
+    }
   } catch (e) {
     // Ignore storage errors
   }
@@ -1039,14 +1076,34 @@ function saveProgress() {
 
 function loadProgress() {
   try {
-    const data = JSON.parse(localStorage.getItem('terminal-challenge-progress'));
-    if (data) {
-      state.completedChallenges = new Set(data.completed || []);
-      state.totalXP = data.xp || 0;
-      state.streak = data.streak || 0;
+    const activeUser = localStorage.getItem('terminal-challenge-active-user');
+    if (activeUser) {
+      const profiles = JSON.parse(localStorage.getItem('terminal-challenge-profiles') || '{}');
+      if (profiles[activeUser]) {
+        state.currentUser = activeUser;
+        state.completedChallenges = new Set(profiles[activeUser].completed || []);
+        state.totalXP = profiles[activeUser].xp || 0;
+        state.streak = profiles[activeUser].streak || 0;
+        updateProfileUI();
+        return;
+      }
     }
+
+    // Default to Guest
+    state.currentUser = null;
+    const guestData = JSON.parse(localStorage.getItem('terminal-challenge-progress'));
+    if (guestData) {
+      state.completedChallenges = new Set(guestData.completed || []);
+      state.totalXP = guestData.xp || 0;
+      state.streak = guestData.streak || 0;
+    } else {
+      state.completedChallenges = new Set();
+      state.totalXP = 0;
+      state.streak = 0;
+    }
+    updateProfileUI();
   } catch (e) {
-    // Ignore
+    // Ignore storage errors
   }
 }
 
@@ -1065,12 +1122,174 @@ function toggleSidebar() {
   }
 }
 
+// ---- User Profile UI & Authentication System ----
+
+function updateProfileUI() {
+  if (state.currentUser) {
+    DOM.profileName.textContent = state.currentUser;
+    DOM.profileRank.textContent = getRankFromXP(state.totalXP);
+    DOM.profileBtn.textContent = '❌';
+    DOM.profileBtn.title = 'Sign Out';
+    DOM.profileBtn.classList.add('logged-in');
+  } else {
+    DOM.profileName.textContent = 'Guest';
+    DOM.profileRank.textContent = 'Guest User';
+    DOM.profileBtn.textContent = '🔑';
+    DOM.profileBtn.title = 'Sign In';
+    DOM.profileBtn.classList.remove('logged-in');
+  }
+}
+
+function getRankFromXP(xp) {
+  if (xp >= 1000) return 'Elite Operator';
+  if (xp >= 600) return 'Cyber Commander';
+  if (xp >= 300) return 'Netrunner';
+  if (xp >= 100) return 'Script Kiddie';
+  return 'Novice Hacker';
+}
+
+function handleProfileBtnClick() {
+  if (state.currentUser) {
+    if (confirm('Are you sure you want to sign out? Your session progress is safe.')) {
+      signOut();
+    }
+  } else {
+    openAuthModal();
+  }
+}
+
+function openAuthModal() {
+  DOM.authOverlay.style.display = 'flex';
+  setTimeout(() => DOM.authOverlay.classList.add('show'), 10);
+  switchAuthTab('signin');
+}
+
+function closeAuthModal() {
+  DOM.authOverlay.classList.remove('show');
+  setTimeout(() => DOM.authOverlay.style.display = 'none', 300);
+  // Refocus terminal input when closing modal
+  DOM.terminalInput.focus();
+}
+
+function switchAuthTab(tab) {
+  state.currentAuthTab = tab;
+  DOM.authTabSignin.classList.toggle('active', tab === 'signin');
+  DOM.authTabRegister.classList.toggle('active', tab === 'register');
+  DOM.authError.textContent = '';
+  DOM.authUsername.value = '';
+  DOM.authPassword.value = '';
+  
+  if (tab === 'signin') {
+    DOM.authSubmitBtn.textContent = 'Access System';
+  } else {
+    DOM.authSubmitBtn.textContent = 'Create Profile';
+  }
+  DOM.authUsername.focus();
+}
+
+function handleAuthSubmit(event) {
+  event.preventDefault();
+  const username = DOM.authUsername.value.trim();
+  const password = DOM.authPassword.value;
+  DOM.authError.textContent = '';
+
+  if (!username || !password) {
+    DOM.authError.textContent = 'Username and password are required.';
+    return;
+  }
+
+  if (username.toLowerCase() === 'guest') {
+    DOM.authError.textContent = 'Cannot use "guest" as a username.';
+    return;
+  }
+
+  try {
+    const profiles = JSON.parse(localStorage.getItem('terminal-challenge-profiles') || '{}');
+
+    if (state.currentAuthTab === 'signin') {
+      const profile = profiles[username];
+      if (!profile || profile.password !== password) {
+        DOM.authError.textContent = 'Invalid username or password.';
+        return;
+      }
+      
+      state.currentUser = username;
+      state.completedChallenges = new Set(profile.completed || []);
+      state.totalXP = profile.xp || 0;
+      state.streak = profile.streak || 0;
+      
+      saveProgress();
+      updateStats();
+      renderChallengeList();
+      
+      addTerminalLine(`\n🔓 Welcome back, Operator ${username}. Profile loaded.`, 'success-line');
+      closeAuthModal();
+    } else {
+      if (profiles[username]) {
+        DOM.authError.textContent = 'Username already exists.';
+        return;
+      }
+
+      const hasGuestProgress = state.completedChallenges.size > 0 && !state.currentUser;
+      let migrateProgress = false;
+      
+      if (hasGuestProgress) {
+        migrateProgress = confirm('Would you like to copy your current Guest progress to your new account?');
+      }
+
+      profiles[username] = {
+        password: password,
+        completed: migrateProgress ? [...state.completedChallenges] : [],
+        xp: migrateProgress ? state.totalXP : 0,
+        streak: migrateProgress ? state.streak : 0
+      };
+      
+      localStorage.setItem('terminal-challenge-profiles', JSON.stringify(profiles));
+      
+      state.currentUser = username;
+      if (!migrateProgress) {
+        state.completedChallenges = new Set();
+        state.totalXP = 0;
+        state.streak = 0;
+      }
+      
+      saveProgress();
+      updateStats();
+      renderChallengeList();
+      
+      addTerminalLine(`\n✨ Profile created successfully. Welcome, Operator ${username}!`, 'success-line');
+      closeAuthModal();
+    }
+  } catch (e) {
+    DOM.authError.textContent = 'An error occurred during authentication.';
+  }
+}
+
+function signOut() {
+  const username = state.currentUser;
+  state.currentUser = null;
+  localStorage.removeItem('terminal-challenge-active-user');
+  
+  loadProgress();
+  updateStats();
+  renderChallengeList();
+  
+  addTerminalLine(`\n🔒 Operator ${username} logged out. Returned to Guest session.`, 'system-line');
+}
+
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', init);
 
 // Keep terminal focused
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.sidebar') && !e.target.closest('.btn') && !e.target.closest('.success-overlay') && !e.target.closest('.sidebar-backdrop')) {
+  if (
+    !e.target.closest('.sidebar') && 
+    !e.target.closest('.btn') && 
+    !e.target.closest('.success-overlay') && 
+    !e.target.closest('.sidebar-backdrop') &&
+    !e.target.closest('.auth-overlay') &&
+    !e.target.closest('.auth-card')
+  ) {
     DOM.terminalInput.focus();
   }
 });

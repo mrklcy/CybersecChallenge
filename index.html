@@ -17,6 +17,16 @@
         <div class="sidebar-subtitle">Hack • Learn • Conquer</div>
       </div>
 
+      <!-- Profile Widget -->
+      <div class="profile-widget" id="profile-widget">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-main">
+          <div class="profile-name" id="profile-name">Guest</div>
+          <div class="profile-rank" id="profile-rank">Novice Hacker</div>
+        </div>
+        <button class="profile-btn" id="profile-btn" onclick="handleProfileBtnClick()" title="Sign In">🔑</button>
+      </div>
+
       <!-- Player Stats -->
       <div class="player-stats">
         <div class="stat-box">
@@ -185,7 +195,8 @@
           >
         </div>
       </div>
-    </main>
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
   </div>
 
   <!-- Success Overlay -->
@@ -199,8 +210,30 @@
     </div>
   </div>
 
-  <!-- Mobile Sidebar Backdrop -->
-  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+  <!-- Auth Modal -->
+  <div class="auth-overlay" id="auth-overlay">
+    <div class="auth-card">
+      <button class="auth-close" onclick="closeAuthModal()">×</button>
+      <div class="auth-header">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="auth-tab-signin" onclick="switchAuthTab('signin')">Sign In</button>
+          <button class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')">Register</button>
+        </div>
+      </div>
+      <form class="auth-form" id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="input-group">
+          <label for="auth-username">Username</label>
+          <input type="text" id="auth-username" required placeholder="Enter username..." autocomplete="off">
+        </div>
+        <div class="input-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" required placeholder="Enter password...">
+        </div>
+        <div class="auth-error" id="auth-error"></div>
+        <button type="submit" class="auth-submit-btn" id="auth-submit-btn">Access System</button>
+      </form>
+    </div>
+  </div>
 
   <!-- Mobile Sidebar Toggle -->
   <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
