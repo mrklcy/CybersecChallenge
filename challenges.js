@@ -1053,7 +1053,7 @@ const CHALLENGES = {
       description: 'The password is encoded in Base64 in "data.txt". Decode it to reveal the password.',
       objective: 'Decode Base64 encoded data.',
       hints: ['base64 with -d flag decodes.', 'base64 -d data.txt'],
-      password: 'The password is dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr',
+      password: 'dtR173fZkb0RRsDFSGsg2RWnpNVj3qRr',
       solutions: ['base64 -d data.txt', 'base64 --decode data.txt', 'cat data.txt | base64 -d'],
       filesystem: {
         'data.txt': 'VGhlIHBhc3N3b3JkIGlzIGR0UjE3M2Zaa2IwUlJzREZTR3NnMlJXbnBOVmozcVJy'
