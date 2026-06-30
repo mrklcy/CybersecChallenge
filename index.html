@@ -192,6 +192,9 @@
             <span class="terminal-dot green"></span>
           </div>
           <div class="terminal-title" id="terminal-title">terminal@challenge:~$</div>
+          <button class="crt-toggle" id="crt-toggle-btn" onclick="toggleCrtMode()" title="Toggle Retro CRT Effect">
+            <span class="crt-indicator"></span> Retro CRT
+          </button>
         </div>
         <div class="terminal-body" id="terminal-body">
           <div class="terminal-line system-line">Welcome to Terminal Challenge v1.0</div>
@@ -208,6 +211,7 @@
           <input type="text" class="terminal-input" id="terminal-input" placeholder="Type your command here..."
             autocomplete="off" spellcheck="false" autofocus>
         </div>
+        <div class="crt-screen-overlay"></div>
       </div>
       <!-- Mobile Sidebar Backdrop -->
       <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>

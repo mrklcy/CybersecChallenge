@@ -2456,3 +2456,108 @@ body::after {
   }
 }
 
+/* ============================================================================
+   RETRO CRT MODE STYLES
+   ============================================================================ */
+
+/* CRT Toggle Button */
+.crt-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-normal);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.crt-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.crt-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #555;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+  transition: all var(--transition-normal);
+}
+
+/* Active indicator style */
+.terminal-container.crt-active .crt-indicator {
+  background: var(--neon-green);
+  box-shadow: 0 0 8px var(--neon-green), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+/* CRT Screen Overlay element */
+.crt-screen-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.4) 100%);
+  transition: all var(--transition-normal);
+  opacity: 0;
+}
+
+/* CRT Scanline & Phosphor Effect */
+.terminal-container.crt-active .crt-screen-overlay {
+  opacity: 1;
+  background: 
+    linear-gradient(
+      rgba(18, 16, 16, 0) 50%, 
+      rgba(0, 0, 0, 0.25) 50%
+    ),
+    radial-gradient(
+      circle,
+      rgba(0, 255, 65, 0.05) 0%,
+      rgba(0, 0, 0, 0.35) 100%
+    );
+  background-size: 100% 4px, 100% 100%;
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* Bulge/curvature and screen vignette */
+.terminal-container.crt-active {
+  box-shadow: inset 0 0 60px rgba(0, 255, 65, 0.15), 0 0 20px rgba(0, 0, 0, 0.8);
+  border-color: rgba(0, 255, 65, 0.3) !important;
+}
+
+.terminal-container.crt-active .terminal-body,
+.terminal-container.crt-active .terminal-input-line {
+  animation: crt-text-glow 2s ease-in-out infinite alternate;
+  filter: contrast(1.1) saturate(1.2);
+}
+
+/* Keyframes for flicker effect */
+@keyframes crt-flicker {
+  0% { opacity: 0.985; }
+  50% { opacity: 0.998; }
+  100% { opacity: 0.991; }
+}
+
+/* Keyframes for glowing text bloom */
+@keyframes crt-text-glow {
+  0% {
+    text-shadow: 0 0 1px rgba(0, 255, 65, 0.3);
+  }
+  100% {
+    text-shadow: 0 0 2px rgba(0, 255, 65, 0.5), 0 0 4px rgba(0, 255, 65, 0.2);
+  }
+}
+
+

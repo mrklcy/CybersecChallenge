@@ -75,6 +75,7 @@ function init() {
   setupTerminal();
   setupUnlockPasswordInput();
   renderLeaderboard();
+  initCrtMode();
 }
 
 // ---- Category Switching ----
@@ -1490,4 +1491,23 @@ function renderLeaderboard() {
   });
 
   listContainer.innerHTML = html;
+}
+
+// ============================================================================
+// RETRO CRT MODE SYSTEM
+// ============================================================================
+function initCrtMode() {
+  const container = document.getElementById('terminal-container');
+  if (!container) return;
+  const isCrtActive = localStorage.getItem('crt-mode-active') === 'true';
+  if (isCrtActive) {
+    container.classList.add('crt-active');
+  }
+}
+
+function toggleCrtMode() {
+  const container = document.getElementById('terminal-container');
+  if (!container) return;
+  const isActive = container.classList.toggle('crt-active');
+  localStorage.setItem('crt-mode-active', isActive);
 }
