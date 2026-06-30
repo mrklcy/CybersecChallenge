@@ -1761,6 +1761,39 @@ body::after {
   align-items: center;
   justify-content: center;
   text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-normal);
+}
+
+.profile-avatar:hover {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+  background: rgba(0, 255, 65, 0.1);
+  transform: scale(1.05);
+}
+
+.profile-avatar::after {
+  content: '⚙️';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.profile-avatar:hover::after {
+  opacity: 1;
+  color: var(--neon-green);
 }
 
 .profile-main {
@@ -2558,6 +2591,64 @@ body::after {
   100% {
     text-shadow: 0 0 2px rgba(0, 255, 65, 0.5), 0 0 4px rgba(0, 255, 65, 0.2);
   }
+}
+
+/* ============================================================================
+   AVATAR PICKER SYSTEM
+   ============================================================================ */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.avatar-option {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  font-size: 1.8rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+}
+
+.avatar-option:hover {
+  background: rgba(0, 255, 65, 0.1);
+  border-color: var(--neon-green);
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+  transform: scale(1.1);
+}
+
+.avatar-option.selected {
+  background: rgba(0, 255, 65, 0.15);
+  border-color: var(--neon-green);
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+}
+
+.avatar-picker-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.avatar-picker-header h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.2rem;
+  color: var(--neon-green);
+  margin-bottom: 6px;
+}
+
+.avatar-picker-header p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.avatar-picker-card {
+  max-width: 360px !important;
 }
 
 

@@ -16,6 +16,7 @@ const state = {
   currentChallenge: null,
   currentUser: null, // null means Guest
   currentAuthTab: 'signin',
+  avatar: '👤',
 };
 
 // ---- DOM References ----
@@ -57,6 +58,7 @@ const DOM = {
   profileName: document.getElementById('profile-name'),
   profileRank: document.getElementById('profile-rank'),
   profileBtn: document.getElementById('profile-btn'),
+  profileAvatar: document.getElementById('profile-avatar'),
   authOverlay: document.getElementById('auth-overlay'),
   authTabSignin: document.getElementById('auth-tab-signin'),
   authTabRegister: document.getElementById('auth-tab-register'),
@@ -65,6 +67,7 @@ const DOM = {
   authPassword: document.getElementById('auth-password'),
   authError: document.getElementById('auth-error'),
   authSubmitBtn: document.getElementById('auth-submit-btn'),
+  avatarOverlay: document.getElementById('avatar-overlay'),
 };
 
 // ---- Initialize ----
@@ -1090,6 +1093,7 @@ function saveProgress() {
     completed: [...state.completedChallenges],
     xp: state.totalXP,
     streak: state.streak,
+    avatar: state.avatar,
   };
 
   try {
@@ -1100,6 +1104,7 @@ function saveProgress() {
         profiles[state.currentUser].completed = progressData.completed;
         profiles[state.currentUser].xp = progressData.xp;
         profiles[state.currentUser].streak = progressData.streak;
+        profiles[state.currentUser].avatar = progressData.avatar;
         localStorage.setItem('terminal-challenge-profiles', JSON.stringify(profiles));
       }
       // Track active user
@@ -1124,6 +1129,7 @@ function loadProgress() {
         state.completedChallenges = new Set(profiles[activeUser].completed || []);
         state.totalXP = profiles[activeUser].xp || 0;
         state.streak = profiles[activeUser].streak || 0;
+        state.avatar = profiles[activeUser].avatar || '👤';
         updateProfileUI();
         return;
       }
@@ -1136,10 +1142,12 @@ function loadProgress() {
       state.completedChallenges = new Set(guestData.completed || []);
       state.totalXP = guestData.xp || 0;
       state.streak = guestData.streak || 0;
+      state.avatar = guestData.avatar || '👤';
     } else {
       state.completedChallenges = new Set();
       state.totalXP = 0;
       state.streak = 0;
+      state.avatar = '👤';
     }
     updateProfileUI();
   } catch (e) {
@@ -1165,6 +1173,7 @@ function toggleSidebar() {
 // ---- User Profile UI & Authentication System ----
 
 function updateProfileUI() {
+  DOM.profileAvatar.textContent = state.avatar;
   if (state.currentUser) {
     DOM.profileName.textContent = state.currentUser;
     DOM.profileRank.textContent = getRankFromXP(state.totalXP);
@@ -1417,6 +1426,7 @@ function renderLeaderboard() {
     localPlayers.push({
       name: username,
       completed: profile.completed || [],
+      avatar: profile.avatar || '👤',
       isCurrentUser: (state.currentUser === username)
     });
   }
@@ -1427,6 +1437,7 @@ function renderLeaderboard() {
     localPlayers.push({
       name: 'Guest (You)',
       completed: guestCompleted,
+      avatar: state.avatar || '👤',
       isCurrentUser: true
     });
   }
@@ -1436,7 +1447,7 @@ function renderLeaderboard() {
     const stats = calculatePlayerStats(p.completed);
     return {
       name: p.name,
-      avatar: p.isCurrentUser ? '👤' : '🤖',
+      avatar: p.avatar,
       tag: p.isCurrentUser ? 'you' : '',
       solved: stats.solved,
       xp: stats.xp,
@@ -1510,4 +1521,38 @@ function toggleCrtMode() {
   if (!container) return;
   const isActive = container.classList.toggle('crt-active');
   localStorage.setItem('crt-mode-active', isActive);
+}
+
+// ============================================================================
+// AVATAR PICKER SYSTEM
+// ============================================================================
+function openAvatarModal() {
+  const overlay = DOM.avatarOverlay;
+  if (!overlay) return;
+  
+  overlay.style.display = 'flex';
+  setTimeout(() => overlay.classList.add('show'), 10);
+  
+  // Highlight currently selected avatar
+  const options = document.querySelectorAll('.avatar-option');
+  options.forEach(opt => {
+    opt.classList.toggle('selected', opt.textContent.trim() === state.avatar);
+  });
+}
+
+function closeAvatarModal() {
+  const overlay = DOM.avatarOverlay;
+  if (!overlay) return;
+  overlay.classList.remove('show');
+  setTimeout(() => overlay.style.display = 'none', 300);
+  DOM.terminalInput.focus();
+}
+
+function selectAvatar(emoji) {
+  state.avatar = emoji;
+  saveProgress();
+  updateProfileUI();
+  renderLeaderboard();
+  closeAvatarModal();
+  addTerminalLine(`\n🤖 Profile avatar updated to: ${emoji}`, 'info-line');
 }

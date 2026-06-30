@@ -23,7 +23,7 @@
 
       <!-- Profile Widget -->
       <div class="profile-widget" id="profile-widget">
-        <div class="profile-avatar">👤</div>
+        <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()" title="Change Avatar">👤</div>
         <div class="profile-main">
           <div class="profile-name" id="profile-name">Guest</div>
           <div class="profile-rank" id="profile-rank">Novice Hacker</div>
@@ -250,6 +250,35 @@
         <div class="auth-error" id="auth-error"></div>
         <button type="submit" class="auth-submit-btn" id="auth-submit-btn">Access System</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Avatar Picker Modal -->
+  <div class="auth-overlay" id="avatar-overlay" style="display: none;">
+    <div class="auth-card avatar-picker-card">
+      <button class="auth-close" onclick="closeAvatarModal()">×</button>
+      <div class="avatar-picker-header">
+        <h2>Choose Your Operator Avatar</h2>
+        <p>Select a cyber icon for your profile and the leaderboard</p>
+      </div>
+      <div class="avatar-grid">
+        <button class="avatar-option" onclick="selectAvatar('👤')">👤</button>
+        <button class="avatar-option" onclick="selectAvatar('💻')">💻</button>
+        <button class="avatar-option" onclick="selectAvatar('🕵️')">🕵️</button>
+        <button class="avatar-option" onclick="selectAvatar('👾')">👾</button>
+        <button class="avatar-option" onclick="selectAvatar('🤖')">🤖</button>
+        <button class="avatar-option" onclick="selectAvatar('🐍')">🐍</button>
+        <button class="avatar-option" onclick="selectAvatar('🦊')">🦊</button>
+        <button class="avatar-option" onclick="selectAvatar('🐱')">🐱</button>
+        <button class="avatar-option" onclick="selectAvatar('🐯')">🐯</button>
+        <button class="avatar-option" onclick="selectAvatar('💀')">💀</button>
+        <button class="avatar-option" onclick="selectAvatar('🚀')">🚀</button>
+        <button class="avatar-option" onclick="selectAvatar('🎯')">🎯</button>
+        <button class="avatar-option" onclick="selectAvatar('🔥')">🔥</button>
+        <button class="avatar-option" onclick="selectAvatar('⚡')">⚡</button>
+        <button class="avatar-option" onclick="selectAvatar('🧠')">🧠</button>
+        <button class="avatar-option" onclick="selectAvatar('🔮')">🔮</button>
+      </div>
     </div>
   </div>
 
