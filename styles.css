@@ -2117,3 +2117,67 @@ body::after {
   animation: shake 0.4s ease;
 }
 
+/* ============================================================================
+   BANDIT UNLOCK PANEL RESPONSIVENESS
+   ============================================================================ */
+@media (max-width: 992px) {
+  .unlock-card {
+    padding: 30px 24px;
+  }
+  .unlock-subtitle {
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .bandit-unlock-panel {
+    padding: 20px 12px;
+  }
+  .unlock-card {
+    padding: 24px 16px;
+  }
+  .unlock-icon {
+    font-size: 2.8rem;
+    margin-bottom: 14px;
+  }
+  .unlock-title {
+    font-size: 1.2rem;
+  }
+  .unlock-subtitle {
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+  }
+  .unlock-input-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .unlock-password-input {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  .btn-unlock-submit {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .bandit-unlock-panel {
+    padding: 12px 8px;
+  }
+  .unlock-card {
+    padding: 20px 12px;
+  }
+  .unlock-icon {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+  }
+  .unlock-title {
+    font-size: 1rem;
+  }
+}
+
