@@ -250,7 +250,7 @@ function selectChallenge(index) {
     }
 
     if (!isBandit) {
-      addTerminalLine("Type your command below. Use 'hint' or 'solution' for help.", 'warning-line');
+      addTerminalLine("Type your command below. Use 'hint' for help.", 'warning-line');
     }
 
     // Focus terminal
@@ -333,7 +333,7 @@ function processCommand(cmd) {
     return;
   }
   if (lowerCmd === 'solution') {
-    showSolution();
+    addTerminalLine("⚠️ Solutions are disabled for this session. Use 'hint' if you are stuck!", 'warning-line');
     return;
   }
   if (lowerCmd === 'reset') {
@@ -1043,7 +1043,6 @@ function showHelp() {
   addTerminalLine('║  help     — Show this help message    ║', 'info-line');
   addTerminalLine('║  clear    — Clear terminal screen     ║', 'info-line');
   addTerminalLine('║  hint     — Get a hint for current    ║', 'info-line');
-  addTerminalLine('║  solution — Reveal the solution       ║', 'info-line');
   addTerminalLine('║  reset    — Reset current challenge   ║', 'info-line');
   addTerminalLine('╠══════════════════════════════════════╣', 'info-line');
   addTerminalLine('║  ↑/↓     — Navigate command history   ║', 'info-line');
