@@ -334,6 +334,9 @@ function processCommand(cmd) {
   }
   if (lowerCmd === 'clear') {
     clearTerminal();
+    if (state.currentChallenge && state.currentChallenge.id === 'cmd-15' && !state.completedChallenges.has('cmd-15')) {
+      completeChallenge();
+    }
     return;
   }
   if (lowerCmd === 'hint') {
