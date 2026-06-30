@@ -70,8 +70,22 @@ const DOM = {
   avatarOverlay: document.getElementById('avatar-overlay'),
 };
 
+// Sorts command and ctf challenge lists by difficulty on startup so that their
+// indices match display order and numbering remains sequential.
+function sortChallengesByDifficulty() {
+  const diffOrder = { easy: 0, medium: 1, hard: 2, expert: 3 };
+  const categoriesToSort = ['command', 'ctf'];
+  
+  categoriesToSort.forEach(cat => {
+    CHALLENGES[cat].sort((a, b) => {
+      return diffOrder[a.difficulty] - diffOrder[b.difficulty];
+    });
+  });
+}
+
 // ---- Initialize ----
 function init() {
+  sortChallengesByDifficulty();
   loadProgress();
   renderChallengeList();
   updateStats();
@@ -124,32 +138,56 @@ function switchCategory(category) {
 // ---- Render Challenge List ----
 function renderChallengeList() {
   const challenges = CHALLENGES[state.currentCategory];
-  const groups = { easy: [], medium: [], hard: [], expert: [] };
-
-  challenges.forEach((ch, index) => {
-    groups[ch.difficulty].push({ ...ch, index });
-  });
-
   let html = '';
-  for (const [diff, items] of Object.entries(groups)) {
-    if (items.length === 0) continue;
-    const config = DIFFICULTY_CONFIG[diff];
+
+  if (state.currentCategory === 'bandit') {
+    // Render Bandit as a single sequential flat list (1 to 100)
     html += `<div class="difficulty-group">`;
-    html += `<div class="difficulty-label ${diff}">${config.icon} ${config.label} (${items.length})</div>`;
-    items.forEach(ch => {
+    html += `<div class="difficulty-label bandit-label">🔓 Bandit Levels (100)</div>`;
+    challenges.forEach((ch, index) => {
       const isCompleted = state.completedChallenges.has(ch.id);
-      const isActive = ch.index === state.currentChallengeIndex;
-      const isLocked = isChallengeLocked(ch.index);
+      const isActive = index === state.currentChallengeIndex;
+      const isLocked = isChallengeLocked(index);
       let cls = 'challenge-item';
       if (isActive) cls += ' active';
       if (isCompleted) cls += ' completed';
       if (isLocked) cls += ' locked';
-      html += `<div class="${cls}" onclick="selectChallenge(${ch.index})" title="${ch.title}">
-        <span class="challenge-num">${String(ch.index + 1).padStart(2, '0')}</span>
+
+      const diffConfig = DIFFICULTY_CONFIG[ch.difficulty];
+      html += `<div class="${cls}" onclick="selectChallenge(${index})" title="${ch.title}">
+        <span class="challenge-num">${String(index + 1).padStart(2, '0')}</span>
         <span class="challenge-title">${ch.title}</span>
+        <span class="challenge-diff-dot" style="color: ${diffConfig.color}; margin-left: auto; font-size: 0.6rem;" title="${diffConfig.label}">${diffConfig.icon}</span>
       </div>`;
     });
     html += `</div>`;
+  } else {
+    // Grouped by difficulty for command and ctf
+    const groups = { easy: [], medium: [], hard: [], expert: [] };
+    challenges.forEach((ch, index) => {
+      groups[ch.difficulty].push({ ...ch, index });
+    });
+
+    for (const [diff, items] of Object.entries(groups)) {
+      if (items.length === 0) continue;
+      const config = DIFFICULTY_CONFIG[diff];
+      html += `<div class="difficulty-group">`;
+      html += `<div class="difficulty-label ${diff}">${config.icon} ${config.label} (${items.length})</div>`;
+      items.forEach(ch => {
+        const isCompleted = state.completedChallenges.has(ch.id);
+        const isActive = ch.index === state.currentChallengeIndex;
+        const isLocked = isChallengeLocked(ch.index);
+        let cls = 'challenge-item';
+        if (isActive) cls += ' active';
+        if (isCompleted) cls += ' completed';
+        if (isLocked) cls += ' locked';
+        html += `<div class="${cls}" onclick="selectChallenge(${ch.index})" title="${ch.title}">
+          <span class="challenge-num">${String(ch.index + 1).padStart(2, '0')}</span>
+          <span class="challenge-title">${ch.title}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
   }
 
   DOM.challengeList.innerHTML = html;
@@ -159,10 +197,17 @@ function renderChallengeList() {
 function isChallengeLocked(index) {
   if (index === 0) return false;
   const challenges = CHALLENGES[state.currentCategory];
+
+  if (state.currentCategory === 'bandit') {
+    const prevChallenge = challenges[index - 1];
+    return !state.completedChallenges.has(prevChallenge.id);
+  }
+
   // First challenge of each difficulty group is unlocked
   const currentDiff = challenges[index].difficulty;
   const firstOfDiff = challenges.findIndex(c => c.difficulty === currentDiff);
   if (index === firstOfDiff) return false;
+  
   // Otherwise, previous in same difficulty must be completed
   const prevChallenge = challenges[index - 1];
   if (prevChallenge && prevChallenge.difficulty === currentDiff) {

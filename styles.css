@@ -312,6 +312,7 @@ body::after {
 .difficulty-label.medium { color: var(--diff-medium); background: rgba(255, 170, 0, 0.05); }
 .difficulty-label.hard { color: var(--diff-hard); background: rgba(255, 68, 68, 0.05); }
 .difficulty-label.expert { color: var(--diff-expert); background: rgba(255, 0, 255, 0.05); }
+.difficulty-label.bandit-label { color: var(--neon-cyan); background: rgba(0, 212, 255, 0.05); }
 
 .challenge-item {
   display: flex;
