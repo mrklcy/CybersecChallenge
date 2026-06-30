@@ -112,6 +112,22 @@
               <div class="welcome-stat-label">CTF Challenges</div>
             </div>
           </div>
+
+          <!-- Leaderboard Card -->
+          <div class="leaderboard-card" id="welcome-leaderboard">
+            <div class="leaderboard-header">
+              <div class="leaderboard-title">🏆 Hacker Leaderboard</div>
+              <div class="leaderboard-tabs">
+                <button class="leaderboard-tab active" data-tab="all" onclick="switchLeaderboardTab('all', event)">General</button>
+                <button class="leaderboard-tab" data-tab="command" onclick="switchLeaderboardTab('command', event)">Command</button>
+                <button class="leaderboard-tab" data-tab="bandit" onclick="switchLeaderboardTab('bandit', event)">Bandit</button>
+                <button class="leaderboard-tab" data-tab="ctf" onclick="switchLeaderboardTab('ctf', event)">CTF</button>
+              </div>
+            </div>
+            <div class="leaderboard-body" id="leaderboard-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
         </div>
 
         <!-- Challenge Info (hidden by default) -->

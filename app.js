@@ -74,6 +74,7 @@ function init() {
   updateStats();
   setupTerminal();
   setupUnlockPasswordInput();
+  renderLeaderboard();
 }
 
 // ---- Category Switching ----
@@ -105,6 +106,9 @@ function switchCategory(category) {
 
   // Render list
   renderChallengeList();
+
+  // Update leaderboard to match category
+  switchLeaderboardTab(category);
 
   // Clear terminal
   clearTerminal();
@@ -480,6 +484,7 @@ function completePreviousChallenge(prevIndex) {
   updateStats();
   renderChallengeList();
   saveProgress();
+  renderLeaderboard();
 
   // Show success overlay
   DOM.successIcon.textContent = '🎉';
@@ -923,6 +928,7 @@ function completeChallenge() {
   updateStats();
   renderChallengeList();
   saveProgress();
+  renderLeaderboard();
 
   // Show success overlay
   DOM.successIcon.textContent = '🎉';
@@ -1254,6 +1260,7 @@ function handleAuthSubmit(event) {
       saveProgress();
       updateStats();
       renderChallengeList();
+      renderLeaderboard();
       
       addTerminalLine(`\n🔓 Welcome back, Operator ${username}. Profile loaded.`, 'success-line');
       closeAuthModal();
@@ -1289,6 +1296,7 @@ function handleAuthSubmit(event) {
       saveProgress();
       updateStats();
       renderChallengeList();
+      renderLeaderboard();
       
       addTerminalLine(`\n✨ Profile created successfully. Welcome, Operator ${username}!`, 'success-line');
       closeAuthModal();
@@ -1306,6 +1314,7 @@ function signOut() {
   loadProgress();
   updateStats();
   renderChallengeList();
+  renderLeaderboard();
   
   addTerminalLine(`\n🔒 Operator ${username} logged out. Returned to Guest session.`, 'system-line');
 }
@@ -1327,3 +1336,158 @@ document.addEventListener('click', (e) => {
     DOM.terminalInput.focus();
   }
 });
+
+// ============================================================================
+// COMPETITIVE LEADERBOARD SYSTEM
+// ============================================================================
+let currentLeaderboardTab = 'all';
+
+const MOCK_RIVALS = [
+  { name: 'root_haxor', avatar: '💻', tag: 'rival', solved: { all: 135, command: 55, bandit: 45, ctf: 35 }, xp: { all: 2450, command: 780, bandit: 870, ctf: 800 } },
+  { name: 'net_viper', avatar: '🐍', tag: 'rival', solved: { all: 110, command: 40, bandit: 38, ctf: 32 }, xp: { all: 1820, command: 550, bandit: 620, ctf: 650 } },
+  { name: 'byte_bandit', avatar: '🦝', tag: 'rival', solved: { all: 92, command: 35, bandit: 42, ctf: 15 }, xp: { all: 1360, command: 480, bandit: 680, ctf: 200 } },
+  { name: 'cyber_phreak', avatar: '👾', tag: 'rival', solved: { all: 70, command: 25, bandit: 20, ctf: 25 }, xp: { all: 1040, command: 320, bandit: 300, ctf: 420 } },
+  { name: 'null_pointer', avatar: '🎯', tag: 'rival', solved: { all: 48, command: 22, bandit: 16, ctf: 10 }, xp: { all: 650, command: 280, bandit: 230, ctf: 140 } },
+];
+
+function switchLeaderboardTab(tab, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  currentLeaderboardTab = tab;
+  
+  // Update active states of tab buttons
+  const tabs = document.querySelectorAll('.leaderboard-tab');
+  tabs.forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+
+  renderLeaderboard();
+}
+
+function calculatePlayerStats(completedIds) {
+  const stats = {
+    solved: { all: 0, command: 0, bandit: 0, ctf: 0 },
+    xp: { all: 0, command: 0, bandit: 0, ctf: 0 }
+  };
+  
+  completedIds.forEach(id => {
+    let foundCh = null;
+    let category = '';
+    
+    if (id.startsWith('cmd-')) {
+      category = 'command';
+      foundCh = CHALLENGES.command.find(c => c.id === id);
+    } else if (id.startsWith('ban-')) {
+      category = 'bandit';
+      foundCh = CHALLENGES.bandit.find(c => c.id === id);
+    } else if (id.startsWith('ctf-')) {
+      category = 'ctf';
+      foundCh = CHALLENGES.ctf.find(c => c.id === id);
+    }
+    
+    if (foundCh) {
+      stats.solved.all++;
+      stats.solved[category]++;
+      stats.xp.all += foundCh.xp;
+      stats.xp[category] += foundCh.xp;
+    }
+  });
+  
+  return stats;
+}
+
+function renderLeaderboard() {
+  const category = currentLeaderboardTab;
+  const listContainer = document.getElementById('leaderboard-list');
+  if (!listContainer) return;
+
+  // 1. Gather all players
+  const localPlayers = [];
+  
+  // Load profiles from localStorage
+  let profiles = {};
+  try {
+    profiles = JSON.parse(localStorage.getItem('terminal-challenge-profiles') || '{}');
+  } catch (e) {}
+
+  // Add registered accounts
+  for (const [username, profile] of Object.entries(profiles)) {
+    localPlayers.push({
+      name: username,
+      completed: profile.completed || [],
+      isCurrentUser: (state.currentUser === username)
+    });
+  }
+
+  // If Guest, add guest
+  if (!state.currentUser) {
+    const guestCompleted = Array.from(state.completedChallenges);
+    localPlayers.push({
+      name: 'Guest (You)',
+      completed: guestCompleted,
+      isCurrentUser: true
+    });
+  }
+
+  // Map local players to standard leaderboard format
+  const formattedLocal = localPlayers.map(p => {
+    const stats = calculatePlayerStats(p.completed);
+    return {
+      name: p.name,
+      avatar: p.isCurrentUser ? '👤' : '🤖',
+      tag: p.isCurrentUser ? 'you' : '',
+      solved: stats.solved,
+      xp: stats.xp,
+      isCurrentUser: p.isCurrentUser
+    };
+  });
+
+  // Combine with mock rivals
+  const allPlayers = [...formattedLocal, ...MOCK_RIVALS];
+
+  // Sort based on selected category XP and solved counts
+  allPlayers.sort((a, b) => {
+    if (b.xp[category] !== a.xp[category]) {
+      return b.xp[category] - a.xp[category];
+    }
+    return b.solved[category] - a.solved[category];
+  });
+
+  // Render list
+  let html = '';
+  allPlayers.forEach((player, idx) => {
+    const rank = idx + 1;
+    let rankHtml = '';
+    if (rank === 1) rankHtml = `<div class="rank-badge rank-1">🥇</div>`;
+    else if (rank === 2) rankHtml = `<div class="rank-badge rank-2">🥈</div>`;
+    else if (rank === 3) rankHtml = `<div class="rank-badge rank-3">🥉</div>`;
+    else rankHtml = `<div class="rank-badge">${rank}</div>`;
+
+    let tagHtml = '';
+    if (player.tag === 'you') {
+      tagHtml = `<span class="player-name-tag you">YOU</span>`;
+    } else if (player.tag === 'rival') {
+      tagHtml = `<span class="player-name-tag rival">RIVAL</span>`;
+    }
+
+    const rowClass = player.isCurrentUser ? 'leaderboard-row current-user' : 'leaderboard-row';
+    const xpVal = player.xp[category];
+    const solvedVal = player.solved[category];
+
+    html += `<div class="${rowClass}">
+      ${rankHtml}
+      <div class="player-name-wrapper">
+        <span class="player-avatar">${player.avatar}</span>
+        <span class="player-name">${escapeHtml(player.name)}</span>
+        ${tagHtml}
+      </div>
+      <div class="player-solved">
+        <span>🎯</span> ${solvedVal} solved
+      </div>
+      <div class="player-xp">${xpVal} XP</div>
+    </div>`;
+  });
+
+  listContainer.innerHTML = html;
+}
