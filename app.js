@@ -6,6 +6,7 @@
 const state = {
   currentCategory: 'command',
   currentChallengeIndex: -1,
+  lastCompletedIndex: -1,
   completedChallenges: new Set(),
   totalXP: 0,
   streak: 0,
@@ -49,9 +50,9 @@ const DOM = {
   btnNext: document.getElementById('btn-next'),
   btnHint: document.getElementById('btn-hint'),
   sidebar: document.getElementById('sidebar'),
-  passwordPanel: document.getElementById('password-panel'),
-  passwordInput: document.getElementById('password-input'),
-  passwordFeedback: document.getElementById('password-feedback'),
+  banditUnlockPanel: document.getElementById('bandit-unlock-panel'),
+  unlockPasswordInput: document.getElementById('unlock-password-input'),
+  unlockFeedback: document.getElementById('unlock-feedback'),
   profileWidget: document.getElementById('profile-widget'),
   profileName: document.getElementById('profile-name'),
   profileRank: document.getElementById('profile-rank'),
@@ -72,7 +73,7 @@ function init() {
   renderChallengeList();
   updateStats();
   setupTerminal();
-  setupPasswordInput();
+  setupUnlockPasswordInput();
 }
 
 // ---- Category Switching ----
@@ -97,7 +98,7 @@ function switchCategory(category) {
   DOM.welcomeScreen.style.display = 'flex';
   DOM.challengeInfo.style.display = 'none';
   DOM.challengeActions.style.display = 'none';
-  DOM.passwordPanel.style.display = 'none';
+  DOM.banditUnlockPanel.style.display = 'none';
 
   // Update terminal prompt
   updatePrompt(category);
@@ -166,7 +167,15 @@ function isChallengeLocked(index) {
 function selectChallenge(index) {
   const challenges = CHALLENGES[state.currentCategory];
   if (index < 0 || index >= challenges.length) return;
-  if (isChallengeLocked(index)) return;
+
+  const isBandit = state.currentCategory === 'bandit';
+  const isLocked = isChallengeLocked(index);
+
+  if (isLocked && !isBandit) {
+    // For command and ctf, show a message or do nothing
+    alert("Please complete the previous challenges first to unlock this level!");
+    return;
+  }
 
   state.currentChallengeIndex = index;
   state.currentChallenge = challenges[index];
@@ -183,68 +192,73 @@ function selectChallenge(index) {
   DOM.headerXP.textContent = `+${ch.xp} XP`;
   DOM.headerXP.style.display = '';
 
-  // Show challenge info
-  DOM.welcomeScreen.style.display = 'none';
-  DOM.challengeInfo.style.display = '';
-  DOM.challengeInfo.className = 'challenge-info animate-fade-in';
-  DOM.challengeActions.style.display = 'flex';
-  DOM.challengeDesc.textContent = ch.description;
-  DOM.challengeObj.textContent = ch.objective;
-  DOM.hintArea.innerHTML = '';
-  DOM.solutionArea.innerHTML = '';
+  // Handle Bandit unlock flow vs normal flow
+  if (isBandit && isLocked && index > 0) {
+    // Show unlock panel, hide main challenge details and terminal
+    DOM.welcomeScreen.style.display = 'none';
+    DOM.challengeInfo.style.display = 'none';
+    DOM.challengeActions.style.display = 'none';
+    DOM.banditUnlockPanel.style.display = 'flex';
+    document.getElementById('terminal-container').style.display = 'none';
 
-  // Toggle next button
-  DOM.btnNext.style.display = isCompleted ? '' : 'none';
-  DOM.btnHint.style.display = isCompleted ? 'none' : '';
+    // Set up unlock panel details
+    document.getElementById('unlock-title').textContent = `Level Locked: ${ch.title}`;
+    document.getElementById('unlock-subtitle').textContent = `To access this level and show the question, you must enter the password found in Level ${index - 1}.`;
+    DOM.unlockPasswordInput.value = '';
+    DOM.unlockFeedback.innerHTML = '';
+    DOM.unlockFeedback.className = 'unlock-feedback';
+    
+    // Focus unlock password input
+    setTimeout(() => DOM.unlockPasswordInput.focus(), 50);
+  } else {
+    // Show challenge info & terminal
+    DOM.welcomeScreen.style.display = 'none';
+    DOM.challengeInfo.style.display = '';
+    DOM.challengeInfo.className = 'challenge-info animate-fade-in';
+    DOM.challengeActions.style.display = 'flex';
+    DOM.banditUnlockPanel.style.display = 'none';
+    document.getElementById('terminal-container').style.display = '';
 
-  // Show/hide password panel for bandit
-  const isBandit = state.currentCategory === 'bandit';
-  DOM.passwordPanel.style.display = isBandit ? '' : 'none';
-  if (isBandit) {
-    DOM.passwordInput.value = '';
-    DOM.passwordFeedback.innerHTML = '';
-    DOM.passwordFeedback.className = 'password-feedback';
-    DOM.passwordPanel.classList.remove('completed');
-    if (isCompleted) {
-      DOM.passwordPanel.classList.add('completed');
-      DOM.passwordInput.disabled = true;
-      DOM.passwordFeedback.innerHTML = '✅ Password already submitted!';
-      DOM.passwordFeedback.className = 'password-feedback correct';
-    } else {
-      DOM.passwordInput.disabled = false;
+    DOM.challengeDesc.textContent = ch.description;
+    DOM.challengeObj.textContent = ch.objective;
+    DOM.hintArea.innerHTML = '';
+    DOM.solutionArea.innerHTML = '';
+
+    // Toggle next button
+    // Always show next button in Bandit to allow proceeding to enter password
+    DOM.btnNext.style.display = (isCompleted || isBandit) ? '' : 'none';
+    DOM.btnHint.style.display = isCompleted ? 'none' : '';
+
+    // Clear terminal & show challenge intro
+    clearTerminal();
+    addTerminalLine(`── Challenge ${index + 1}: ${ch.title} ──`, 'info-line');
+    addTerminalLine(ch.description, '');
+    addTerminalLine('', '');
+
+    // For bandit challenges, show available files
+    if (isBandit && ch.filesystem) {
+      addTerminalLine('📁 Files in current directory:', 'system-line');
+      displayFilesystem(ch.filesystem, '');
+      addTerminalLine('', '');
+      addTerminalLine('🔐 Explore using commands below, find the password, then click "Next" or select the next level to submit it.', 'warning-line');
     }
+
+    // For CTF challenges, show instructions
+    if (state.currentCategory === 'ctf') {
+      addTerminalLine('🚩 Use ping and network commands to solve this challenge.', 'system-line');
+      addTerminalLine('', '');
+    }
+
+    if (!isBandit) {
+      addTerminalLine("Type your command below. Use 'hint' or 'solution' for help.", 'warning-line');
+    }
+
+    // Focus terminal
+    DOM.terminalInput.focus();
   }
 
   // Update list
   renderChallengeList();
-
-  // Clear terminal & show challenge intro
-  clearTerminal();
-  addTerminalLine(`── Challenge ${index + 1}: ${ch.title} ──`, 'info-line');
-  addTerminalLine(ch.description, '');
-  addTerminalLine('', '');
-
-  // For bandit challenges, show available files
-  if (isBandit && ch.filesystem) {
-    addTerminalLine('📁 Files in current directory:', 'system-line');
-    displayFilesystem(ch.filesystem, '');
-    addTerminalLine('', '');
-    addTerminalLine('🔐 Explore using commands below, then submit the password above.', 'warning-line');
-    addTerminalLine('   You can also type: submit <password>', 'warning-line');
-  }
-
-  // For CTF challenges, show instructions
-  if (state.currentCategory === 'ctf') {
-    addTerminalLine('🚩 Use ping and network commands to solve this challenge.', 'system-line');
-    addTerminalLine('', '');
-  }
-
-  if (!isBandit) {
-    addTerminalLine("Type your command below. Use 'hint' or 'solution' for help.", 'warning-line');
-  }
-
-  // Focus terminal
-  DOM.terminalInput.focus();
 
   // Close sidebar on mobile/tablet after selecting a challenge
   if (DOM.sidebar && DOM.sidebar.classList.contains('open')) {
@@ -327,12 +341,7 @@ function processCommand(cmd) {
     return;
   }
   if (lowerCmd.startsWith('submit ')) {
-    const password = cmd.substring(7).trim();
-    if (state.currentCategory === 'bandit' && state.currentChallenge) {
-      submitPasswordFromTerminal(password);
-    } else {
-      addTerminalLine('⚠️ The submit command is only used in Bandit challenges.', 'warning-line');
-    }
+    addTerminalLine('⚠️ Please submit the password using the submission panel above the terminal.', 'warning-line');
     return;
   }
   if (lowerCmd === 'next') {
@@ -387,7 +396,7 @@ function processCommandChallenge(cmd) {
 }
 
 // ---- Bandit Challenge Processing ----
-// In Bandit mode, commands only show output — the user must submit the password separately
+// In Bandit mode, commands only show output — the user must submit the password to unlock the next level
 function processBanditChallenge(cmd) {
   const ch = state.currentChallenge;
 
@@ -398,75 +407,94 @@ function processBanditChallenge(cmd) {
     addTerminalLine('No filesystem available for this challenge.', 'warning-line');
   }
 
-  // Remind user to submit password
+  // If it's the last level, check if they solved it directly
+  const challenges = CHALLENGES.bandit;
+  const isLastLevel = state.currentChallengeIndex === challenges.length - 1;
+  if (isLastLevel) {
+    const normalizedCmd = normalizeCommand(cmd);
+    const isCorrect = ch.solutions.some(sol => normalizeCommand(sol) === normalizedCmd);
+    if (isCorrect || normalizedCmd === ch.password.toLowerCase() || normalizedCmd === `submit ${ch.password.toLowerCase()}`) {
+      completeChallenge();
+      return;
+    }
+  }
+
+  // Remind user of next steps
   addTerminalLine('', '');
-  addTerminalLine('🔐 Found the password? Submit it using the panel above or type: submit <password>', 'system-line');
+  if (isLastLevel) {
+    addTerminalLine('🏆 This is the final level! Find the final password and run the command to complete the challenge.', 'success-line');
+  } else {
+    addTerminalLine('🔐 Found the password? Click the "Next" button or select the next level in the sidebar to enter it.', 'system-line');
+  }
 }
 
-// ---- Submit Password (from the UI panel) ----
-function submitPassword() {
-  const input = DOM.passwordInput.value.trim();
+// ---- Submit Unlock Password (from the locked view) ----
+function submitUnlockPassword() {
+  const input = DOM.unlockPasswordInput.value.trim();
   if (!input) {
-    DOM.passwordFeedback.innerHTML = '⚠️ Please enter a password.';
-    DOM.passwordFeedback.className = 'password-feedback incorrect';
+    DOM.unlockFeedback.innerHTML = '⚠️ Please enter a password.';
+    DOM.unlockFeedback.className = 'unlock-feedback incorrect';
     return;
   }
-  checkBanditPassword(input);
+  checkUnlockPassword(input);
 }
 
-// ---- Submit Password (from terminal command) ----
-function submitPasswordFromTerminal(password) {
-  if (!password) {
-    addTerminalLine('⚠️ Usage: submit <password>', 'warning-line');
-    return;
-  }
-  // Also update the password input field
-  DOM.passwordInput.value = password;
-  checkBanditPassword(password);
-}
+// ---- Check Unlock Password ----
+function checkUnlockPassword(password) {
+  const currentIndex = state.currentChallengeIndex;
+  if (currentIndex <= 0) return; // Level 0 doesn't need unlock password
 
-// ---- Check Bandit Password ----
-function checkBanditPassword(password) {
-  const ch = state.currentChallenge;
-  if (!ch || !ch.password) {
-    addTerminalLine('⚠️ No password to check for this challenge.', 'warning-line');
-    return;
-  }
+  const prevChallenge = CHALLENGES.bandit[currentIndex - 1];
+  if (!prevChallenge) return;
 
-  if (state.completedChallenges.has(ch.id)) {
-    addTerminalLine('✅ Already completed!', 'info-line');
-    return;
-  }
-
-  const isCorrect = password === ch.password;
+  const isCorrect = password === prevChallenge.password;
 
   if (isCorrect) {
-    // Correct password!
-    DOM.passwordFeedback.innerHTML = '✅ Correct password! Challenge complete!';
-    DOM.passwordFeedback.className = 'password-feedback correct';
-    DOM.passwordPanel.classList.add('completed');
-    DOM.passwordInput.disabled = true;
-    addTerminalLine('', '');
-    addTerminalLine(`🔑 Password accepted: ${ch.password}`, 'success-line');
-    completeChallenge();
+    DOM.unlockFeedback.innerHTML = '✅ Correct password! Unlocking level...';
+    DOM.unlockFeedback.className = 'unlock-feedback correct';
+    
+    // Complete the previous challenge!
+    completePreviousChallenge(currentIndex - 1);
   } else {
-    // Wrong password
-    DOM.passwordFeedback.innerHTML = `❌ Incorrect password. Keep searching!`;
-    DOM.passwordFeedback.className = 'password-feedback incorrect shake';
-    addTerminalLine(`❌ Wrong password: "${escapeHtml(password)}" — Try again.`, 'error-line');
-    // Remove shake after animation
+    DOM.unlockFeedback.innerHTML = '❌ Incorrect password. Try again!';
+    DOM.unlockFeedback.className = 'unlock-feedback incorrect shake';
+    
+    // Shake animation reset
     setTimeout(() => {
-      DOM.passwordFeedback.classList.remove('shake');
+      DOM.unlockFeedback.classList.remove('shake');
     }, 400);
   }
 }
 
-// ---- Setup Password Input (Enter key) ----
-function setupPasswordInput() {
-  DOM.passwordInput.addEventListener('keydown', (e) => {
+// ---- Complete Previous Challenge ----
+function completePreviousChallenge(prevIndex) {
+  const challenges = CHALLENGES[state.currentCategory];
+  const ch = challenges[prevIndex];
+  if (!ch || state.completedChallenges.has(ch.id)) return;
+
+  state.completedChallenges.add(ch.id);
+  state.totalXP += ch.xp;
+  state.streak++;
+  state.lastCompletedIndex = prevIndex;
+
+  updateStats();
+  renderChallengeList();
+  saveProgress();
+
+  // Show success overlay
+  DOM.successIcon.textContent = '🎉';
+  DOM.successTitle.textContent = `Level ${prevIndex} Complete!`;
+  DOM.successMessage.textContent = ch.successMessage || 'Level unlocked successfully!';
+  DOM.successXP.textContent = `+${ch.xp} XP`;
+  DOM.successOverlay.classList.add('show');
+}
+
+// ---- Setup Unlock Password Input (Enter key) ----
+function setupUnlockPasswordInput() {
+  DOM.unlockPasswordInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      submitPassword();
+      submitUnlockPassword();
     }
   });
 }
@@ -886,6 +914,7 @@ function completeChallenge() {
   state.completedChallenges.add(ch.id);
   state.totalXP += ch.xp;
   state.streak++;
+  state.lastCompletedIndex = state.currentChallengeIndex;
 
   addTerminalLine('', '');
   addTerminalLine(`✅ ${ch.successMessage}`, 'success-line');
@@ -909,6 +938,11 @@ function completeChallenge() {
 
 function closeSuccess() {
   DOM.successOverlay.classList.remove('show');
+  if (state.lastCompletedIndex === state.currentChallengeIndex) {
+    nextChallenge();
+  } else {
+    selectChallenge(state.currentChallengeIndex);
+  }
   DOM.terminalInput.focus();
 }
 
@@ -1288,7 +1322,8 @@ document.addEventListener('click', (e) => {
     !e.target.closest('.success-overlay') && 
     !e.target.closest('.sidebar-backdrop') &&
     !e.target.closest('.auth-overlay') &&
-    !e.target.closest('.auth-card')
+    !e.target.closest('.auth-card') &&
+    !e.target.closest('.bandit-unlock-panel')
   ) {
     DOM.terminalInput.focus();
   }

@@ -141,27 +141,27 @@
           </button>
         </div>
 
-        <!-- Bandit Password Submission (hidden by default) -->
-        <div class="password-submit-panel" id="password-panel" style="display: none;">
-          <div class="password-panel-header">
-            <span class="password-panel-icon">🔐</span>
-            <span class="password-panel-title">Submit Password</span>
-            <span class="password-panel-hint">Use the terminal to explore files and find the hidden password, then enter it below.</span>
+        <!-- Bandit Level Unlock Panel (hidden by default) -->
+        <div class="bandit-unlock-panel" id="bandit-unlock-panel" style="display: none;">
+          <div class="unlock-card animate-fade-in">
+            <div class="unlock-icon">🔐</div>
+            <div class="unlock-title" id="unlock-title">Level Locked</div>
+            <div class="unlock-subtitle" id="unlock-subtitle">To access this level, you must enter the password found in the previous level.</div>
+            <div class="unlock-input-row">
+              <input
+                type="text"
+                class="unlock-password-input"
+                id="unlock-password-input"
+                placeholder="Enter password to unlock..."
+                autocomplete="off"
+                spellcheck="false"
+              >
+              <button class="btn btn-unlock-submit" id="btn-unlock-submit" onclick="submitUnlockPassword()">
+                <span>🔓</span> Unlock
+              </button>
+            </div>
+            <div class="unlock-feedback" id="unlock-feedback"></div>
           </div>
-          <div class="password-input-row">
-            <input
-              type="text"
-              class="password-input"
-              id="password-input"
-              placeholder="Enter the password you found..."
-              autocomplete="off"
-              spellcheck="false"
-            >
-            <button class="btn btn-submit-password" id="btn-submit-password" onclick="submitPassword()">
-              <span>🔓</span> Submit
-            </button>
-          </div>
-          <div class="password-feedback" id="password-feedback"></div>
         </div>
       </div>
 

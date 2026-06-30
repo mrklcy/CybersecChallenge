@@ -353,9 +353,17 @@ body::after {
 }
 
 .challenge-item.locked {
-  opacity: 0.35;
-  cursor: not-allowed;
-  pointer-events: none;
+  opacity: 0.45;
+  cursor: pointer;
+}
+
+.challenge-item.locked::after {
+  content: '🔒';
+  position: absolute;
+  right: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .challenge-num {
@@ -1967,5 +1975,145 @@ body::after {
 .auth-submit-btn:hover {
   box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
   transform: translateY(-1px);
+}
+
+/* ============================================================================
+   BANDIT UNLOCK PANEL
+   ============================================================================ */
+.bandit-unlock-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 40px 24px;
+}
+
+.unlock-card {
+  width: 100%;
+  max-width: 600px;
+  background: var(--bg-card);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(0, 212, 255, 0.05);
+  animation: fadeIn 0.4s ease;
+}
+
+.unlock-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+}
+
+.unlock-icon {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.4));
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.3)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.6)); }
+}
+
+.unlock-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.unlock-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.unlock-input-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.unlock-password-input {
+  flex: 1;
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 14px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  color: var(--neon-cyan);
+  outline: none;
+  caret-color: var(--neon-cyan);
+  transition: all var(--transition-normal);
+}
+
+.unlock-password-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.unlock-password-input:focus {
+  border-color: rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.btn-unlock-submit {
+  background: rgba(0, 212, 255, 0.12);
+  border-color: rgba(0, 212, 255, 0.4);
+  color: var(--neon-cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  cursor: pointer;
+  letter-spacing: 1.5px;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+}
+
+.btn-unlock-submit:hover {
+  background: rgba(0, 212, 255, 0.25);
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.unlock-feedback {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  min-height: 1.5em;
+  margin-top: 10px;
+}
+
+.unlock-feedback.correct {
+  color: var(--neon-green);
+}
+
+.unlock-feedback.incorrect {
+  color: var(--neon-red);
+}
+
+.unlock-feedback.shake {
+  animation: shake 0.4s ease;
 }
 
