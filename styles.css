@@ -388,6 +388,7 @@ body::after {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   position: relative;
 }
 
@@ -556,7 +557,8 @@ body::after {
   padding: 24px;
   backdrop-filter: blur(10px);
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 250px;
 }
 
 .challenge-info::before {
@@ -1404,6 +1406,7 @@ body::after {
   .challenge-info {
     padding: 16px;
     border-radius: var(--radius-sm);
+    max-height: 200px;
   }
 
   .challenge-info::before {
@@ -1612,6 +1615,7 @@ body::after {
 
   .challenge-info {
     padding: 12px;
+    max-height: 140px;
   }
 
   .challenge-description {
