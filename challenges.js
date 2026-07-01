@@ -1065,7 +1065,7 @@ const CHALLENGES = {
       description: 'The password in "data.txt" is ROT13 encoded. Decode it.',
       objective: 'Apply ROT13 cipher.',
       hints: ['tr can translate characters.', "tr 'A-Za-z' 'N-ZA-Mn-za-m'"],
-      password: '5Te8Y4drgCRfCx8ugdwuEX8KFC6k2EUu',
+      password: '5Te8Y4drGcFrX8Xugdwuexex8KFC6k2Ru',
       solutions: ["cat data.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'", "tr 'A-Za-z' 'N-ZA-Mn-za-m' < data.txt"],
       filesystem: {
         'data.txt': '5Gr8L4qeTpSeK8Khtqjhrkrk8XSP6x2Eh'
@@ -3205,31 +3205,31 @@ const CHALLENGES = {
 
 // Difficulty metadata
 const DIFFICULTY_CONFIG = {
-  easy:   { label: 'Easy',   color: '#00ff41', icon: '🟢', xpMultiplier: 1 },
+  easy: { label: 'Easy', color: '#00ff41', icon: '🟢', xpMultiplier: 1 },
   medium: { label: 'Medium', color: '#ffaa00', icon: '🟡', xpMultiplier: 2 },
-  hard:   { label: 'Hard',   color: '#ff4444', icon: '🔴', xpMultiplier: 3 },
+  hard: { label: 'Hard', color: '#ff4444', icon: '🔴', xpMultiplier: 3 },
   expert: { label: 'Expert', color: '#ff00ff', icon: '💀', xpMultiplier: 5 }
 };
 
 // Category metadata
 const CATEGORY_CONFIG = {
-  command: { 
-    label: 'Command Challenge', 
-    icon: '⌨️', 
+  command: {
+    label: 'Command Challenge',
+    icon: '⌨️',
     color: '#00ff41',
     description: 'Master Linux commands by solving progressively harder challenges.',
     terminalPrompt: 'cmd'
   },
-  bandit: { 
-    label: 'Bandit Challenge', 
-    icon: '🔓', 
+  bandit: {
+    label: 'Bandit Challenge',
+    icon: '🔓',
     color: '#00d4ff',
     description: 'Find hidden passwords and keys to advance through each level.',
     terminalPrompt: 'bandit'
   },
-  ctf: { 
-    label: 'CTF Challenge', 
-    icon: '🚩', 
+  ctf: {
+    label: 'CTF Challenge',
+    icon: '🚩',
     color: '#ff00ff',
     description: 'Capture the Flag! Use ping and network tools to find hidden flags.',
     terminalPrompt: 'ctf'

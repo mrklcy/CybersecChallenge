@@ -503,7 +503,17 @@ function checkUnlockPassword(password) {
   const prevChallenge = CHALLENGES.bandit[currentIndex - 1];
   if (!prevChallenge) return;
 
-  const isCorrect = password === prevChallenge.password;
+  // Exact match check
+  let isCorrect = password === prevChallenge.password;
+
+  // Lookalike-tolerant, case-insensitive fallback check
+  if (!isCorrect) {
+    const clean = (str) => str.toLowerCase().trim()
+      .replace(/l/g, '1')
+      .replace(/i/g, '1')
+      .replace(/o/g, '0');
+    isCorrect = clean(password) === clean(prevChallenge.password);
+  }
 
   if (isCorrect) {
     DOM.unlockFeedback.innerHTML = '✅ Correct password! Unlocking level...';
