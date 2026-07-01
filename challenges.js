@@ -1065,7 +1065,7 @@ const CHALLENGES = {
       description: 'The password in "data.txt" is ROT13 encoded. Decode it.',
       objective: 'Apply ROT13 cipher.',
       hints: ['tr can translate characters.', "tr 'A-Za-z' 'N-ZA-Mn-za-m'"],
-      password: '5Te8Y4drgCRfCx8ugdwuEX8KFC6k2EUu',
+      password: '5Te8Y4drGcFrX8Xugdwuexex8KFC6k2Ru',
       solutions: ["cat data.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'", "tr 'A-Za-z' 'N-ZA-Mn-za-m' < data.txt"],
       filesystem: {
         'data.txt': '5Gr8L4qeTpSeK8Khtqjhrkrk8XSP6x2Eh'
