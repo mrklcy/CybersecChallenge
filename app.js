@@ -2632,7 +2632,8 @@ document.addEventListener('click', (e) => {
     !e.target.closest('.sidebar-backdrop') &&
     !e.target.closest('.auth-overlay') &&
     !e.target.closest('.auth-card') &&
-    !e.target.closest('.bandit-unlock-panel')
+    !e.target.closest('.bandit-unlock-panel') &&
+    !e.target.closest('.ctf-flag-panel')
   ) {
     DOM.terminalInput.focus();
   }
