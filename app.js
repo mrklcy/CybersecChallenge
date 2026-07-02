@@ -14,6 +14,7 @@ const state = {
   historyIndex: -1,
   hintIndex: 0,
   currentChallenge: null,
+  activeFilesystem: null,
   currentUser: null, // null means Guest
   currentAuthTab: 'signin',
   avatar: '👤',
@@ -234,6 +235,12 @@ function selectChallenge(index) {
   state.currentChallenge = challenges[index];
   state.hintIndex = 0;
 
+  if (state.currentChallenge.filesystem) {
+    state.activeFilesystem = JSON.parse(JSON.stringify(state.currentChallenge.filesystem));
+  } else {
+    state.activeFilesystem = null;
+  }
+
   const ch = state.currentChallenge;
   const isCompleted = state.completedChallenges.has(ch.id);
 
@@ -289,9 +296,9 @@ function selectChallenge(index) {
     addTerminalLine('', '');
 
     // For bandit challenges, show available files
-    if (isBandit && ch.filesystem) {
+    if (isBandit && state.activeFilesystem) {
       addTerminalLine('📁 Files in current directory:', 'system-line');
-      displayFilesystem(ch.filesystem, '');
+      displayFilesystem(state.activeFilesystem, '');
       addTerminalLine('', '');
       addTerminalLine('🔐 Explore using commands below, find the password, then click "Next" or select the next level to submit it.', 'warning-line');
     }
@@ -575,7 +582,7 @@ function processCTFChallenge(cmd) {
   // Check if correct
   const isCorrect = ch.solutions.some(sol => {
     const normSol = normalizeCommand(sol);
-    return normalizedCmd === normSol || normalizedCmd.startsWith(normSol) || normSol.startsWith(normalizedCmd);
+    return normalizedCmd === normSol || normalizedCmd.startsWith(normSol);
   });
 
   if (isCorrect) {
@@ -620,238 +627,415 @@ function simulateBanditCommand(cmd, ch) {
   const normalizedCmd = cmd.trim().toLowerCase().replace(/\s+/g, ' ');
   const matchedSolution = ch.solutions && ch.solutions.some(sol => {
     const normSol = sol.trim().toLowerCase().replace(/\s+/g, ' ');
-    return normalizedCmd === normSol || normalizedCmd.includes(normSol) || normSol.includes(normalizedCmd);
+    return normalizedCmd === normSol || normalizedCmd.includes(normSol);
   });
   if (matchedSolution) {
     addTerminalLine(ch.password, 'success-line');
     return;
   }
 
-  const parts = cmd.trim().split(/\s+/);
-  const command = parts[0].toLowerCase();
-  const args = parts.slice(1).join(' ').replace(/['"]/g, '');
-  const fs = ch.filesystem;
+  const output = executePipeline(cmd, ch);
+  if (output) {
+    const lines = output.split('\n');
+    lines.forEach(line => {
+      if (line.includes(ch.password)) {
+        addTerminalLine(line, 'success-line');
+      } else {
+        addTerminalLine(line, 'output-line');
+      }
+    });
+  }
+}
 
+function executePipeline(cmd, ch) {
+  const redirectRegex = /\s*(>>|>)\s*(\S+)\s*$/;
+  const redirectMatch = cmd.match(redirectRegex);
+  let baseCmd = cmd;
+  let redirectOp = null;
+  let redirectFile = null;
+  
+  if (redirectMatch) {
+    baseCmd = cmd.substring(0, redirectMatch.index);
+    redirectOp = redirectMatch[1];
+    redirectFile = redirectMatch[2].replace(/['"]/g, '');
+  }
+  
+  const segments = splitByPipe(baseCmd);
+  let pipedInput = '';
+  let commandOutput = '';
+  
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i].trim();
+    if (!segment) continue;
+    
+    const parts = parseArguments(segment);
+    const command = parts[0].toLowerCase();
+    const args = parts.slice(1);
+    
+    const runResult = runVirtualCommand(command, args, pipedInput, ch);
+    if (runResult.error) {
+      addTerminalLine(runResult.error, 'error-line');
+      return '';
+    }
+    pipedInput = runResult.output;
+    commandOutput = runResult.output;
+  }
+  
+  if (redirectFile) {
+    writeToVirtualFS(redirectFile, commandOutput, redirectOp === '>>');
+    return '';
+  }
+  
+  return commandOutput;
+}
+
+function runVirtualCommand(command, args, pipedInput, ch) {
+  const fs = state.activeFilesystem || {};
+  
   if (command === 'ls') {
-    const target = args.replace('-la', '').replace('-al', '').replace('-a', '').replace('-l', '').trim() || '';
-    const dir = target ? navigateFS(fs, target) : fs;
+    const hasA = args.some(arg => arg.startsWith('-') && arg.includes('a'));
+    const hasL = args.some(arg => arg.startsWith('-') && arg.includes('l'));
+    const targetPath = args.filter(arg => !arg.startsWith('-'))[0] || '';
+    
+    const dir = targetPath ? navigateFS(fs, targetPath) : fs;
     if (dir && typeof dir === 'object') {
+      let lines = [];
       for (const [name, val] of Object.entries(dir)) {
-        if (name.endsWith('/') && (!args.includes('-a') && name.startsWith('.'))) continue;
+        const isHidden = name.startsWith('.');
+        if (isHidden && !hasA) continue;
+        
         if (typeof val === 'object' && name.endsWith('/')) {
-          addTerminalLine(`drwxr-xr-x  2 user user 4096  ${name}`, 'fs-output');
+          if (hasL) {
+            lines.push(`drwxr-xr-x  2 user user 4096  ${name}`);
+          } else {
+            lines.push(name);
+          }
         } else if (typeof val === 'string') {
-          const size = val.length;
-          const hidden = name.startsWith('.');
-          if (!hidden || args.includes('-a') || args.includes('-la') || args.includes('-al')) {
+          if (hasL) {
             if (val.startsWith('[FILE]')) {
-              addTerminalLine(val.replace('[FILE] ', ''), 'output-line');
+              lines.push(val.replace('[FILE] ', ''));
             } else {
-              addTerminalLine(`-rw-r--r--  1 user user ${String(size).padStart(5)}  ${name}`, 'output-line');
+              lines.push(`-rw-r--r--  1 user user ${val.length}  ${name}`);
             }
+          } else {
+            lines.push(name);
           }
         }
       }
+      return { output: lines.join('\n'), error: null };
     } else {
-      addTerminalLine(`ls: cannot access '${target}': No such file or directory`, 'error-line');
+      return { output: '', error: `ls: cannot access '${targetPath}': No such file or directory` };
     }
-    return;
   }
 
   if (command === 'cat') {
-    const filePath = args.replace('./', '');
-    const content = findInFS(fs, filePath);
-    if (content !== null && typeof content === 'string') {
-      const lines = content.split('\n');
-      lines.forEach(line => {
-        if (line.includes(ch.password)) {
-          addTerminalLine(line, 'success-line');
-        } else {
-          addTerminalLine(line, 'output-line');
-        }
-      });
-    } else if (content !== null && typeof content === 'object') {
-      addTerminalLine(`cat: ${filePath}: Is a directory`, 'error-line');
-    } else {
-      addTerminalLine(`cat: ${filePath}: No such file or directory`, 'error-line');
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    if (!targetFile || targetFile === '-') {
+      return { output: pipedInput, error: null };
     }
-    return;
-  }
-
-  if (command === 'find') {
-    addTerminalLine(`Searching...`, 'output-line');
-    const results = flattenFS(fs, '.');
-    const sizeArg = cmd.match(/-size\s+(\d+)c/);
-    const nameArg = cmd.match(/-name\s+["']?([^"'\s]+)["']?/);
-    const emptyArg = cmd.includes('-empty');
-    const typeArg = cmd.match(/-type\s+(\w)/);
-
-    results.forEach(({ path, content, isDir }) => {
-      let show = true;
-      if (typeArg && typeArg[1] === 'f' && isDir) show = false;
-      if (typeArg && typeArg[1] === 'd' && !isDir) show = false;
-      if (nameArg && !path.match(new RegExp(nameArg[1].replace('*', '.*')))) show = false;
-      if (sizeArg && typeof content === 'string' && content.length !== parseInt(sizeArg[1])) show = false;
-      if (emptyArg && typeof content === 'string' && content.length > 0) show = false;
-      if (show) {
-        const cls = (typeof content === 'string' && content.includes(ch.password)) ? 'success-line' : 'output-line';
-        addTerminalLine(path, cls);
-      }
-    });
-    return;
+    const content = findInFS(fs, targetFile);
+    if (content !== null && typeof content === 'string') {
+      return { output: content, error: null };
+    } else if (content !== null && typeof content === 'object') {
+      return { output: '', error: `cat: ${targetFile}: Is a directory` };
+    } else {
+      return { output: '', error: `cat: ${targetFile}: No such file or directory` };
+    }
   }
 
   if (command === 'grep') {
-    const grepMatch = cmd.match(/grep\s+(?:-\w+\s+)*["']?([^"'\s]+)["']?\s+(.+)/);
-    if (grepMatch) {
-      const pattern = grepMatch[1];
-      const file = grepMatch[2].trim();
-      const content = findInFS(fs, file);
-      if (content && typeof content === 'string') {
-        const lines = content.split('\n');
-        lines.forEach(line => {
-          if (line.toLowerCase().includes(pattern.toLowerCase())) {
-            addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
-          }
-        });
-      } else {
-        addTerminalLine(`grep: ${file}: No such file or directory`, 'error-line');
+    const flags = args.filter(arg => arg.startsWith('-'));
+    const nonFlags = args.filter(arg => !arg.startsWith('-'));
+    const pattern = nonFlags[0];
+    const targetFile = nonFlags[1];
+    
+    if (!pattern) {
+      return { output: '', error: 'grep: pattern expected' };
+    }
+    
+    let content = '';
+    if (targetFile) {
+      const fileVal = findInFS(fs, targetFile);
+      if (fileVal === null) {
+        return { output: '', error: `grep: ${targetFile}: No such file or directory` };
       }
-    }
-    return;
-  }
-
-  if (command === 'file') {
-    const target = args.replace('./*', 'inhere/*').replace('*', '');
-    if (target.endsWith('/') || target.endsWith('/*') || target.includes('*')) {
-      const dirPath = target.replace('/*', '').replace('*', '') || '.';
-      const dir = navigateFS(fs, dirPath) || fs;
-      if (typeof dir === 'object') {
-        for (const [name, val] of Object.entries(dir)) {
-          if (typeof val === 'string') {
-            if (val.startsWith('\x00') || val.startsWith('\x7f') || val.startsWith('\x89') || val.startsWith('\xff') || val.startsWith('\x1f')) {
-              addTerminalLine(`${dirPath}/${name}: data`, 'output-line');
-            } else {
-              addTerminalLine(`${dirPath}/${name}: ASCII text`, 'success-line');
-            }
-          }
-        }
-      }
-    }
-    return;
-  }
-
-  if (command === 'strings') {
-    const content = findInFS(fs, args);
-    if (content && typeof content === 'string') {
-      const printable = content.replace(/[^\x20-\x7E\n]/g, '').split('\n').filter(l => l.length > 3);
-      printable.forEach(line => {
-        addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
-      });
-    }
-    return;
-  }
-
-  if (command === 'head' || command === 'tail') {
-    const numMatch = cmd.match(/-(?:n\s+)?(\d+)/);
-    const num = numMatch ? parseInt(numMatch[1]) : 10;
-    const fileName = parts[parts.length - 1];
-    const content = findInFS(fs, fileName);
-    if (content && typeof content === 'string') {
-      const lines = content.split('\n');
-      const selected = command === 'head' ? lines.slice(0, num) : lines.slice(-num);
-      selected.forEach(line => {
-        addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
-      });
-    }
-    return;
-  }
-
-  if (command === 'base64') {
-    if (args.includes('-d') || args.includes('--decode')) {
-      const fileName = parts[parts.length - 1];
-      const content = findInFS(fs, fileName);
-      if (content) {
-        try {
-          const decoded = atob(content.trim());
-          addTerminalLine(decoded, decoded.includes(ch.password) ? 'success-line' : 'output-line');
-        } catch {
-          addTerminalLine(ch.password || 'Decoded content', 'success-line');
-        }
-      }
-    }
-    return;
-  }
-
-  if (command === 'xxd') {
-    if (args.includes('-r')) {
-      addTerminalLine(ch.password || 'Decoded content', 'success-line');
+      content = typeof fileVal === 'string' ? fileVal : '';
     } else {
-      const fileName = parts[parts.length - 1];
-      const content = findInFS(fs, fileName);
-      if (content) {
-        addTerminalLine(content, 'output-line');
-      }
+      content = pipedInput;
     }
-    return;
+    
+    const lines = content.split('\n');
+    const matched = lines.filter(line => {
+      const matchCase = flags.some(f => f.includes('i')) ? line.toLowerCase().includes(pattern.toLowerCase()) : line.includes(pattern);
+      return matchCase;
+    });
+    return { output: matched.join('\n'), error: null };
   }
 
-  if (command === 'sort') {
-    const fileName = parts[parts.length - 1];
-    const content = findInFS(fs, fileName);
-    if (content && typeof content === 'string') {
-      let lines = content.split('\n').sort();
-      if (args.includes('-u')) {
-        lines = [...new Set(lines)];
-      }
-      lines.forEach(line => {
-        addTerminalLine(line, line.includes(ch.password) ? 'success-line' : 'output-line');
-      });
-      if (cmd.includes('| uniq -u')) {
-        const counts = {};
-        content.split('\n').forEach(l => counts[l] = (counts[l] || 0) + 1);
-        const unique = Object.entries(counts).filter(([, c]) => c === 1).map(([l]) => l);
-        addTerminalLine('--- Unique lines ---', 'info-line');
-        unique.forEach(l => addTerminalLine(l, 'success-line'));
-      }
+  if (command === 'wc') {
+    const hasL = args.includes('-l');
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `wc: ${targetFile}: No such file or directory` };
     }
-    return;
+    content = String(content);
+    
+    if (hasL) {
+      const lineCount = content ? content.split('\n').length : 0;
+      return { output: String(lineCount), error: null };
+    } else {
+      const lines = content ? content.split('\n').length : 0;
+      const words = content ? content.split(/\s+/).filter(Boolean).length : 0;
+      const chars = content ? content.length : 0;
+      return { output: `${lines} ${words} ${chars}`, error: null };
+    }
   }
 
   if (command === 'rev') {
-    const fileName = parts[parts.length - 1];
-    const content = findInFS(fs, fileName);
-    if (content) {
-      const reversed = content.split('').reverse().join('');
-      addTerminalLine(reversed, 'success-line');
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `rev: ${targetFile}: No such file or directory` };
     }
-    return;
+    content = String(content);
+    const reversed = content.split('\n').map(line => line.split('').reverse().join('')).join('\n');
+    return { output: reversed, error: null };
   }
 
-  if (command === 'stat') {
-    const results = flattenFS(fs, '.');
-    results.forEach(({ path, content }) => {
-      if (content && typeof content === 'string' && content.includes('[PERMS:') || content && typeof content === 'string' && content.includes('[MTIME:')) {
-        addTerminalLine(`${path}: ${content}`, 'output-line');
+  if (command === 'base64') {
+    const decode = args.includes('-d') || args.includes('--decode');
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `base64: ${targetFile}: No such file or directory` };
+    }
+    content = String(content).trim();
+    if (decode) {
+      try {
+        const decoded = atob(content);
+        return { output: decoded, error: null };
+      } catch (e) {
+        return { output: '', error: 'base64: invalid input' };
       }
-    });
-    return;
+    } else {
+      const encoded = btoa(content);
+      return { output: encoded, error: null };
+    }
+  }
+
+  if (command === 'xxd') {
+    const revert = args.includes('-r');
+    const plain = args.includes('-p');
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `xxd: ${targetFile}: No such file or directory` };
+    }
+    content = String(content);
+    if (revert) {
+      if (plain) {
+        try {
+          const cleanHex = content.replace(/\s+/g, '');
+          let decoded = '';
+          for (let i = 0; i < cleanHex.length; i += 2) {
+            decoded += String.fromCharCode(parseInt(cleanHex.substr(i, 2), 16));
+          }
+          return { output: decoded, error: null };
+        } catch (e) {
+          return { output: '', error: 'xxd: revert failed' };
+        }
+      } else {
+        return { output: ch.password || 'Decoded content', error: null };
+      }
+    } else {
+      return { output: content, error: null };
+    }
+  }
+
+  if (command === 'sort') {
+    const hasU = args.includes('-u');
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `sort: ${targetFile}: No such file or directory` };
+    }
+    content = String(content);
+    let lines = content.split('\n');
+    lines.sort();
+    if (hasU) {
+      lines = [...new Set(lines)];
+    }
+    return { output: lines.join('\n'), error: null };
+  }
+
+  if (command === 'uniq') {
+    const hasU = args.includes('-u');
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `uniq: ${targetFile}: No such file or directory` };
+    }
+    content = String(content);
+    const lines = content.split('\n');
+    let filtered = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (i === 0 || lines[i] !== lines[i - 1]) {
+        if (hasU) {
+          const repeats = lines.filter(l => l === lines[i]).length;
+          if (repeats === 1) {
+            filtered.push(lines[i]);
+          }
+        } else {
+          filtered.push(lines[i]);
+        }
+      }
+    }
+    return { output: filtered.join('\n'), error: null };
+  }
+
+  if (command === 'file') {
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0] || '';
+    if (targetFile.endsWith('*')) {
+      const dirPath = targetFile.replace('*', '') || '.';
+      const dir = navigateFS(fs, dirPath) || fs;
+      if (typeof dir === 'object') {
+        let lines = [];
+        for (const [name, val] of Object.entries(dir)) {
+          if (typeof val === 'string') {
+            if (val.startsWith('\x00') || val.startsWith('\x7f') || val.startsWith('\x89') || val.startsWith('\xff') || val.startsWith('\x1f')) {
+              lines.push(`${dirPath}/${name}: data`);
+            } else {
+              lines.push(`${dirPath}/${name}: ASCII text`);
+            }
+          }
+        }
+        return { output: lines.join('\n'), error: null };
+      }
+    }
+    const content = findInFS(fs, targetFile);
+    if (content !== null && typeof content === 'string') {
+      if (content.startsWith('\x00') || content.startsWith('\x7f') || content.startsWith('\x89') || content.startsWith('\xff') || content.startsWith('\x1f')) {
+        return { output: `${targetFile}: data`, error: null };
+      } else {
+        return { output: `${targetFile}: ASCII text`, error: null };
+      }
+    }
+    return { output: '', error: `file: ${targetFile}: No such file or directory` };
+  }
+
+  if (command === 'strings') {
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `strings: ${targetFile}: No such file or directory` };
+    }
+    content = String(content);
+    const printable = content.replace(/[^\x20-\x7E\n]/g, '').split('\n').filter(l => l.length > 3);
+    return { output: printable.join('\n'), error: null };
+  }
+
+  if (command === 'head' || command === 'tail') {
+    const numFlag = args.find(arg => arg.startsWith('-n'));
+    let num = 10;
+    if (numFlag) {
+      const index = args.indexOf(numFlag);
+      if (index !== -1 && args[index + 1]) {
+        num = parseInt(args[index + 1]) || 10;
+      }
+    } else {
+      const numArg = args.find(arg => arg.startsWith('-') && /^\d+$/.test(arg.substring(1)));
+      if (numArg) {
+        num = parseInt(numArg.substring(1)) || 10;
+      }
+    }
+    
+    const targetFile = args.find(arg => !arg.startsWith('-') && arg !== String(num));
+    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    if (content === null) {
+      return { output: '', error: `head/tail: target not found` };
+    }
+    content = String(content);
+    const lines = content.split('\n');
+    const selected = command === 'head' ? lines.slice(0, num) : lines.slice(-num);
+    return { output: selected.join('\n'), error: null };
   }
 
   if (command === 'echo') {
-    const output = args.replace(/^["']|["']$/g, '');
-    addTerminalLine(output, output.includes(ch.password) ? 'success-line' : 'output-line');
-    return;
+    const text = args.join(' ');
+    return { output: text, error: null };
+  }
+
+  if (command === 'stat') {
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    const content = findInFS(fs, targetFile);
+    if (content !== null && typeof content === 'string') {
+      if (content.includes('[PERMS:') || content.includes('[MTIME:')) {
+        return { output: `${targetFile}: ${content}`, error: null };
+      }
+      return { output: `${targetFile}: regular file, size: ${content.length}`, error: null };
+    }
+    return { output: '', error: `stat: ${targetFile}: No such file or directory` };
+  }
+
+  if (command === 'touch') {
+    const targetFile = args[0];
+    if (targetFile) {
+      writeToVirtualFS(targetFile, '', false);
+    }
+    return { output: '', error: null };
+  }
+
+  if (command === 'mkdir') {
+    const targetDir = args[0];
+    if (targetDir) {
+      const cleanPath = targetDir.replace(/^\.\//, '').replace(/\/$/, '') + '/';
+      writeToVirtualFS(cleanPath, {}, false);
+    }
+    return { output: '', error: null };
+  }
+
+  if (command === 'rm') {
+    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
+    if (targetFile) {
+      removeFromVirtualFS(targetFile);
+    }
+    return { output: '', error: null };
+  }
+
+  if (command === 'chmod') {
+    return { output: '', error: null };
+  }
+
+  if (command === 'bash' || command === 'sh' || command.startsWith('./')) {
+    const scriptFile = command.startsWith('./') ? command : args[0];
+    if (!scriptFile) {
+      return { output: '', error: 'bash: script expected' };
+    }
+    const content = findInFS(fs, scriptFile);
+    if (content && typeof content === 'string') {
+      const scriptLines = content.split('\n');
+      let scriptOutput = [];
+      for (const line of scriptLines) {
+        const cleanLine = line.trim();
+        if (!cleanLine || cleanLine.startsWith('#')) continue;
+        
+        const runResult = executePipeline(cleanLine, ch);
+        if (runResult) {
+          scriptOutput.push(runResult);
+        }
+      }
+      return { output: scriptOutput.join('\n'), error: null };
+    }
+    return { output: '', error: `bash: ${scriptFile}: No such file or directory` };
   }
 
   if (command === 'sqlite3' || command === 'openssl' || command === 'dig' || command === 'nslookup' || command === 'zcat' || command === 'gunzip' || command === 'getfattr' || command === 'md5sum' || command === 'sha256sum' || command === 'printf') {
-    // Simulate by showing the password
-    addTerminalLine(`Output: ${ch.password}`, 'success-line');
-    return;
+    return { output: `Output: ${ch.password}`, error: null };
   }
 
-  // Generic fallback
-  addTerminalLine(`Executing: ${cmd}`, 'output-line');
+  return { output: `Executing: ${command} ${args.join(' ')}`, error: null };
 }
 
 // ---- Simulate Ping ----
@@ -867,6 +1051,100 @@ function simulatePing(cmd) {
   addTerminalLine(`1 packets transmitted, 1 received, 0% packet loss`, 'output-line');
   addTerminalLine(``, '');
   addTerminalLine(`❌ Correct target, but check the specific requirements.`, 'warning-line');
+}
+
+// ---- Pipeline & Argument Parsing Helpers ----
+function splitByPipe(str) {
+  const result = [];
+  let current = '';
+  let inDoubleQuotes = false;
+  let inSingleQuotes = false;
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === '"' && !inSingleQuotes) {
+      inDoubleQuotes = !inDoubleQuotes;
+      current += char;
+    } else if (char === "'" && !inDoubleQuotes) {
+      inSingleQuotes = !inSingleQuotes;
+      current += char;
+    } else if (char === '|' && !inDoubleQuotes && !inSingleQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function parseArguments(str) {
+  const args = [];
+  let current = '';
+  let inDoubleQuotes = false;
+  let inSingleQuotes = false;
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === '"' && !inSingleQuotes) {
+      inDoubleQuotes = !inDoubleQuotes;
+    } else if (char === "'" && !inDoubleQuotes) {
+      inSingleQuotes = !inSingleQuotes;
+    } else if (/\s/.test(char) && !inDoubleQuotes && !inSingleQuotes) {
+      if (current) {
+        args.push(current);
+        current = '';
+      }
+    } else {
+      current += char;
+    }
+  }
+  if (current) {
+    args.push(current);
+  }
+  return args;
+}
+
+// ---- Virtual Filesystem Helpers ----
+function writeToVirtualFS(path, content, append) {
+  const fs = state.activeFilesystem;
+  if (!fs) return;
+  
+  const cleanPath = path.replace(/^\.\//, '');
+  const parts = cleanPath.split('/');
+  const fileName = parts.pop();
+  
+  let current = fs;
+  for (const part of parts) {
+    if (current[part + '/'] === undefined) {
+      current[part + '/'] = {};
+    }
+    current = current[part + '/'];
+  }
+  
+  const oldContent = current[fileName] || '';
+  if (append) {
+    current[fileName] = (oldContent ? oldContent + '\n' : '') + content;
+  } else {
+    current[fileName] = content;
+  }
+}
+
+function removeFromVirtualFS(path) {
+  const fs = state.activeFilesystem;
+  if (!fs) return;
+  
+  const cleanPath = path.replace(/^\.\//, '');
+  const parts = cleanPath.split('/');
+  const targetName = parts.pop();
+  
+  let current = fs;
+  for (const part of parts) {
+    if (current[part + '/'] === undefined) return;
+    current = current[part + '/'];
+  }
+  
+  delete current[targetName];
+  delete current[targetName + '/'];
 }
 
 // ---- Filesystem Helpers ----
