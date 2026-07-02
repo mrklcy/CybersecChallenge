@@ -39,6 +39,7 @@ const state = {
   activeFilesystem: null,
   currentDir: '', // path relative to home directory (~/)
   sshTunnelActive: false,
+  env: {},
   currentUser: null, // null means Guest
   currentAuthTab: 'signin',
   avatar: '👤',
@@ -130,6 +131,7 @@ function switchCategory(category) {
   state.currentChallenge = null;
   state.currentDir = '';
   state.sshTunnelActive = false;
+  state.env = {};
 
   // Update tabs
   document.querySelectorAll('.category-tab').forEach(tab => {
@@ -265,9 +267,12 @@ function selectChallenge(index) {
   state.hintIndex = 0;
   state.currentDir = '';
   state.sshTunnelActive = false;
+  state.env = {};
 
   if (state.currentChallenge.filesystem) {
     state.activeFilesystem = JSON.parse(JSON.stringify(state.currentChallenge.filesystem));
+  } else if (state.currentCategory === 'command') {
+    state.activeFilesystem = autoGenerateCommandFilesystem(state.currentChallenge);
   } else {
     state.activeFilesystem = null;
   }
@@ -336,12 +341,16 @@ function selectChallenge(index) {
     addTerminalLine(ch.description, '');
     addTerminalLine('', '');
 
-    // For bandit challenges, show available files
-    if (isBandit && state.activeFilesystem) {
+    // For bandit/command challenges, show available files
+    if ((isBandit || state.currentCategory === 'command') && state.activeFilesystem) {
       addTerminalLine('📁 Files in current directory:', 'system-line');
       displayFilesystem(state.activeFilesystem, '');
       addTerminalLine('', '');
-      addTerminalLine('🔐 Explore using commands below, find the password, then click "Next" or select the next level to submit it.', 'warning-line');
+      if (isBandit) {
+        addTerminalLine('🔐 Explore using commands below, find the password, then click "Next" or select the next level to submit it.', 'warning-line');
+      } else {
+        addTerminalLine('🛠️ Run commands to complete the task, then check your changes!', 'warning-line');
+      }
     }
 
     // For CTF challenges, show instructions
@@ -482,21 +491,28 @@ function processCommand(cmd) {
 function processCommandChallenge(cmd) {
   const ch = state.currentChallenge;
   const normalizedCmd = normalizeCommand(cmd);
-  const isCorrect = ch.solutions.some(sol => normalizeCommand(sol) === normalizedCmd);
+  
+  const output = runChainedCommands(cmd, ch);
+  if (output) {
+    addTerminalLine(output, 'output-line');
+  }
 
-  if (isCorrect) {
-    simulateCommandOutput(cmd);
+  const textCorrect = ch.solutions.some(sol => {
+    const normSol = normalizeCommand(sol);
+    return normalizedCmd === normSol || normalizedCmd.startsWith(normSol);
+  });
+  const stateCorrect = validateCommandChallengeState(ch);
+  
+  if (textCorrect || stateCorrect) {
     completeChallenge();
   } else {
-    // Check partial match for helpful feedback
     const firstWord = cmd.split(' ')[0].toLowerCase();
     const solutionFirstWords = ch.solutions.map(s => s.split(' ')[0].toLowerCase());
 
     if (solutionFirstWords.includes(firstWord)) {
       addTerminalLine(`⚠️ Right command, but check your arguments/flags.`, 'warning-line');
     } else {
-      simulateCommandOutput(cmd);
-      addTerminalLine(`❌ That's not the expected command. Try again or type 'hint'.`, 'error-line');
+      addTerminalLine(`❌ That's not the expected command or the filesystem state doesn't match the goal. Try again!`, 'error-line');
     }
   }
 }
@@ -671,14 +687,12 @@ function processCTFChallenge(cmd) {
   const ch = state.currentChallenge;
   const normalizedCmd = normalizeCommand(cmd);
 
-  // Check if correct
   const isCorrect = ch.solutions.some(sol => {
     const normSol = normalizeCommand(sol);
     return normalizedCmd === normSol || normalizedCmd.startsWith(normSol);
   });
 
   if (isCorrect) {
-    // Show simulated response
     if (ch.simulatedResponse) {
       const lines = ch.simulatedResponse.split('\n');
       lines.forEach(line => {
@@ -699,29 +713,24 @@ function processCTFChallenge(cmd) {
       addTerminalLine(`\n🚩 FLAG: ${ch.flag}`, 'success-line');
     }
   } else {
-    const lower = cmd.toLowerCase().trim();
-    if (lower.startsWith('ping') || lower.startsWith('nmap') || lower.startsWith('traceroute') || lower.startsWith('tracert')) {
-      const output = executePipeline(cmd, ch);
-      if (output) {
-        const lines = output.split('\n');
-        lines.forEach(line => {
-          if (line.includes('Flag:') || line.includes('CTF{')) {
-            addTerminalLine(line, 'success-line');
-          } else {
-            addTerminalLine(line, 'output-line');
-          }
-        });
-      }
+    const output = runChainedCommands(cmd, ch);
+    if (output) {
+      const lines = output.split('\n');
+      lines.forEach(line => {
+        if (line.includes('Flag:') || line.includes('CTF{')) {
+          addTerminalLine(line, 'success-line');
+        } else {
+          addTerminalLine(line, 'output-line');
+        }
+      });
     } else {
-      addTerminalLine(`bash: command output simulated`, 'output-line');
+      addTerminalLine(`❌ Not quite right. Check the challenge requirements.`, 'error-line');
     }
-    addTerminalLine(`❌ Not quite right. Check the challenge requirements.`, 'error-line');
   }
 }
 
 // ---- Simulate Bandit Commands ----
 function simulateBanditCommand(cmd, ch) {
-  // If the command is or includes one of the official solutions, directly reveal the password!
   const normalizedCmd = cmd.trim().toLowerCase().replace(/\s+/g, ' ');
   const matchedSolution = ch.solutions && ch.solutions.some(sol => {
     const normSol = sol.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -732,7 +741,7 @@ function simulateBanditCommand(cmd, ch) {
     return;
   }
 
-  const output = executePipeline(cmd, ch);
+  const output = runChainedCommands(cmd, ch);
   if (output) {
     const lines = output.split('\n');
     lines.forEach(line => {
@@ -745,8 +754,166 @@ function simulateBanditCommand(cmd, ch) {
   }
 }
 
+function replaceEnvVariables(cmd) {
+  let result = cmd;
+  for (const [key, val] of Object.entries(state.env || {})) {
+    const regex = new RegExp('\\$' + key + '\\b', 'g');
+    result = result.replace(regex, val);
+  }
+  return result;
+}
+
+function runChainedCommands(cmdLine, ch) {
+  const segments = [];
+  let current = '';
+  let inDoubleQuotes = false;
+  let inSingleQuotes = false;
+  
+  for (let i = 0; i < cmdLine.length; i++) {
+    const char = cmdLine[i];
+    if (char === '"' && !inSingleQuotes) {
+      inDoubleQuotes = !inDoubleQuotes;
+      current += char;
+    } else if (char === "'" && !inDoubleQuotes) {
+      inSingleQuotes = !inSingleQuotes;
+      current += char;
+    } else if (char === ';' && !inDoubleQuotes && !inSingleQuotes) {
+      segments.push({ type: ';', text: current.trim() });
+      current = '';
+    } else if (char === '&' && cmdLine[i + 1] === '&' && !inDoubleQuotes && !inSingleQuotes) {
+      segments.push({ type: '&&', text: current.trim() });
+      current = '';
+      i++;
+    } else {
+      current += char;
+    }
+  }
+  if (current.trim()) {
+    segments.push({ type: ';', text: current.trim() });
+  }
+
+  let lastOutput = '';
+  let skipRemaining = false;
+  
+  for (const seg of segments) {
+    if (skipRemaining && seg.type === '&&') continue;
+    skipRemaining = false;
+    state.lastCommandError = false;
+    
+    const cmdText = seg.text;
+    if (!cmdText) continue;
+    
+    const assignMatch = cmdText.match(/^([A-Za-z_]\w*)=(.*)$/);
+    if (assignMatch) {
+      const varName = assignMatch[1];
+      const varVal = assignMatch[2].trim().replace(/['"]/g, '');
+      state.env[varName] = varVal;
+      lastOutput = '';
+    } else {
+      lastOutput = executePipeline(cmdText, ch);
+      if (state.lastCommandError && seg.type === '&&') {
+        skipRemaining = true;
+      }
+    }
+  }
+  return lastOutput;
+}
+function autoGenerateCommandFilesystem(ch) {
+  const mockFs = { 'readme.txt': 'Welcome to Command Challenge! Solve the level by executing the correct command.' };
+  const desc = ch.description.toLowerCase();
+  
+  if (desc.includes('script.sh')) {
+    mockFs['script.sh'] = '#!/bin/bash\necho "Hello World"';
+  }
+  if (desc.includes('notes.txt') || desc.includes('compress')) {
+    mockFs['notes.txt'] = 'Secret notes that need compression or deletion.';
+  }
+  if (desc.includes('old.txt') || desc.includes('remove') || desc.includes('delete')) {
+    mockFs['old.txt'] = 'Old temporary file content.';
+  }
+  if (desc.includes('data.txt') || desc.includes('rename')) {
+    mockFs['data.txt'] = 'Raw data file.';
+  }
+  if (desc.includes('config.ini') || desc.includes('stat')) {
+    mockFs['config.ini'] = '[Settings]\nversion=1.0\ndebug=true';
+  }
+  if (desc.includes('archive.tar.gz')) {
+    mockFs['archive.tar.gz'] = '[COMPRESSED] [TAR]\nnotes.txt:Secret notes that need compression or deletion.';
+  }
+  if (desc.includes('numbers.txt')) {
+    mockFs['numbers.txt'] = '100\n200\n300\n400\n337';
+  }
+  if (desc.includes('perm') || desc.includes('executable')) {
+    mockFs['script.sh'] = '#!/bin/bash\necho "Run me"';
+  }
+  
+  return mockFs;
+}
+
+function validateCommandChallengeState(ch) {
+  const fs = state.activeFilesystem || {};
+  const desc = ch.description.toLowerCase();
+  
+  // 1. Directory creation
+  if (desc.includes('directory') || desc.includes('folder') || desc.includes('mkdir')) {
+    const dirs = Object.keys(fs).filter(k => k.endsWith('/'));
+    if (dirs.length > 0) return true;
+  }
+  
+  // 2. File deletion / removal
+  if (desc.includes('remove') || desc.includes('delete') || desc.includes('rm ')) {
+    if (desc.includes('old.txt') && fs['old.txt'] === undefined) return true;
+    if (desc.includes('notes.txt') && fs['notes.txt'] === undefined) return true;
+  }
+  
+  // 3. File renaming / moving
+  if (desc.includes('rename') || desc.includes('move') || desc.includes('mv ')) {
+    if (desc.includes('data.txt') && fs['data.txt'] === undefined) {
+      const newFiles = Object.keys(fs).filter(k => !k.endsWith('/') && k !== 'readme.txt' && k !== 'data.txt');
+      if (newFiles.length > 0) return true;
+    }
+  }
+  
+  // 4. File compression / archive
+  if (desc.includes('tar') || desc.includes('zip') || desc.includes('compress')) {
+    const keys = Object.keys(fs);
+    if (keys.some(k => k.endsWith('.tar.gz') || k.endsWith('.gz') || k.endsWith('.zip'))) return true;
+  }
+
+  // 5. File copying
+  if (desc.includes('copy') || desc.includes('cp ')) {
+    if (desc.includes('notes.txt')) {
+      const keys = Object.keys(fs);
+      const copies = keys.filter(k => k !== 'notes.txt' && k.includes('notes'));
+      if (copies.length > 0) return true;
+    }
+  }
+
+  return false;
+}
 function executePipeline(cmd, ch) {
-  let baseCmd = evaluateSubshells(cmd, ch);
+  let baseCmd = replaceEnvVariables(evaluateSubshells(cmd, ch));
+
+  const inputRedirectRegex = /<\s*(\S+)\s*$/;
+  const inputRedirectMatch = baseCmd.match(inputRedirectRegex);
+  let pipedInput = '';
+  if (inputRedirectMatch) {
+    const inputFile = inputRedirectMatch[1].replace(/['"]/g, '');
+    const resolvedInput = resolvePath(inputFile);
+    const inputContent = getFileSystemItem(resolvedInput);
+    if (inputContent !== null && typeof inputContent === 'string') {
+      pipedInput = inputContent;
+    } else if (inputContent !== null && typeof inputContent === 'object') {
+      addTerminalLine(`bash: ${inputFile}: Is a directory`, 'error-line');
+      state.lastCommandError = true;
+      return '';
+    } else {
+      addTerminalLine(`bash: ${inputFile}: No such file or directory`, 'error-line');
+      state.lastCommandError = true;
+      return '';
+    }
+    baseCmd = baseCmd.substring(0, inputRedirectMatch.index);
+  }
 
   const redirectRegex = /\s*(>>|>)\s*(\S+)\s*$/;
   const redirectMatch = baseCmd.match(redirectRegex);
@@ -760,24 +927,25 @@ function executePipeline(cmd, ch) {
   }
   
   const segments = splitByPipe(baseCmd);
-  let pipedInput = '';
-  let commandOutput = '';
+  let commandOutput = pipedInput;
   
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i].trim();
     if (!segment) continue;
     
     const parts = parseArguments(segment);
+    if (!parts || parts.length === 0 || !parts[0]) continue;
     const command = parts[0].toLowerCase();
     const rawArgs = parts.slice(1);
     const args = expandWildcards(rawArgs);
+    const evaluatedArgs = args.map(arg => replaceEnvVariables(arg));
     
-    const runResult = runVirtualCommand(command, args, pipedInput, ch);
+    const runResult = runVirtualCommand(command, evaluatedArgs, commandOutput, ch);
     if (runResult.error) {
       addTerminalLine(runResult.error, 'error-line');
+      state.lastCommandError = true;
       return '';
     }
-    pipedInput = runResult.output;
     commandOutput = runResult.output;
   }
   
@@ -902,7 +1070,14 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     const isInverted = flags.some(f => f.includes('v'));
     
     const matched = lines.filter(line => {
-      let isMatch = isCaseInsensitive ? line.toLowerCase().includes(pattern.toLowerCase()) : line.includes(pattern);
+      let isMatch = false;
+      try {
+        const regexFlags = isCaseInsensitive ? 'i' : '';
+        const regex = new RegExp(pattern, regexFlags);
+        isMatch = regex.test(line);
+      } catch (err) {
+        isMatch = isCaseInsensitive ? line.toLowerCase().includes(pattern.toLowerCase()) : line.includes(pattern);
+      }
       return isInverted ? !isMatch : isMatch;
     });
     return { output: matched.join('\n'), error: null };
@@ -1787,6 +1962,116 @@ function runVirtualCommand(command, args, pipedInput, ch) {
 
   if (command === 'nmap') {
     return { output: simulateNmap(args, ch), error: null };
+  }
+
+  if (command === 'gobuster') {
+    const uFlag = args.indexOf('-u');
+    const wFlag = args.indexOf('-w');
+    const targetUrl = uFlag !== -1 ? args[uFlag + 1] : null;
+    
+    if (!targetUrl) {
+      return { output: '', error: 'gobuster: target URL required (-u)' };
+    }
+    
+    return {
+      output: `===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     ${targetUrl}
+[+] Method:                  GET
+[+] Wordlist:                ${wFlag !== -1 ? args[wFlag + 1] : 'default_wordlist.txt'}
+===============================================================
+/robots.txt           (Status: 200) [Size: 45]
+/admin                (Status: 403) [Size: 102]
+/secret_key.pem       (Status: 200) [Size: 120]
+===============================================================
+Progress: 1000 / 1000 (100.00%)
+===============================================================`,
+      error: null
+    };
+  }
+
+  if (command === 'hydra') {
+    const lFlag = args.indexOf('-l');
+    const PFlag = args.indexOf('-P');
+    const user = lFlag !== -1 ? args[lFlag + 1] : 'admin';
+    
+    return {
+      output: `Hydra v9.2 (c) 2021 by van Hauser/THC - Please refer to the README.txt for licensing info.
+[DATA] attacking ssh://10.0.0.1:22/
+[STATUS] attack started with 16 threads
+[22][ssh] host: 10.0.0.1   login: ${user}   password: letmein
+1 valid password found!
+Hydra completed successfully.`,
+      error: null
+    };
+  }
+
+  if (command === 'john') {
+    const hashFile = args.find(a => !a.startsWith('-'));
+    if (!hashFile) {
+      return { output: '', error: 'john: hash file required' };
+    }
+    
+    return {
+      output: `Loaded 1 password hash (raw-md5)
+Press 'q' or Ctrl+C to abort
+letmein          (admin)
+1 password cracked, 0 left`,
+      error: null
+    };
+  }
+
+  if (command === 'sqlmap') {
+    const uFlag = args.indexOf('-u');
+    const targetUrl = uFlag !== -1 ? args[uFlag + 1] : args.find(a => a.startsWith('http'));
+    
+    if (!targetUrl) {
+      return { output: '', error: 'sqlmap: URL target required (-u)' };
+    }
+    
+    return {
+      output: `___
+       __H__
+ ___ ___[']_____ ___ ___  {1.6#stable}
+|_ -| . [']     | .'| . |
+|___|_  [']_|_|_|__,|  _|
+      |_|[']        |_|   http://sqlmap.org
+
+[*] starting at 12:00:00
+
+[INFO] testing connection to the target URL
+[INFO] checking if the target is protected by some WAF/IPS
+[INFO] testing parameter 'id' for SQL injection
+[INFO] GET parameter 'id' appears to be 'AND boolean-based blind - WHERE or HAVING clause' vulnerable
+[INFO] database: ctf_db, table: users
++----+-------+--------------------+
+| id | admin | password           |
++----+-------+--------------------+
+| 1  | true  | letmein            |
+| 2  | false | secret_flag_sql    |
++----+-------+--------------------+`,
+      error: null
+    };
+  }
+
+  if (command === 'nc' || command === 'netcat') {
+    const ip = args.find(a => /\d+\.\d+\.\d+\.\d+/.test(a));
+    const port = args.find(a => /^\d+$/.test(a));
+    if (!ip || !port) {
+      return { output: '', error: 'nc: target IP and port required' };
+    }
+    return {
+      output: `Connection to ${ip} ${port} port [tcp/*] succeeded!\nSSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.1\nProtocol mismatch.`,
+      error: null
+    };
+  }
+
+  if (command === 'history') {
+    const list = state.commandHistory || [];
+    const formatted = list.map((cmd, idx) => `  ${idx + 1}  ${cmd}`).join('\n');
+    return { output: formatted || 'No history recorded yet.', error: null };
   }
 
   return { output: `Executing: ${command} ${args.join(' ')}`, error: null };
