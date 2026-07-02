@@ -613,16 +613,23 @@ function processCTFChallenge(cmd) {
     }
     completeChallenge();
   } else {
-    // Partial simulation
-    if (cmd.toLowerCase().startsWith('ping')) {
-      simulatePing(cmd);
-    } else if (cmd.toLowerCase().startsWith('traceroute') || cmd.toLowerCase().startsWith('tracert')) {
-      addTerminalLine('traceroute: Running...', 'output-line');
-      addTerminalLine('Try the specific target from the challenge description.', 'warning-line');
+    const lower = cmd.toLowerCase().trim();
+    if (lower.startsWith('ping') || lower.startsWith('nmap') || lower.startsWith('traceroute') || lower.startsWith('tracert')) {
+      const output = executePipeline(cmd, ch);
+      if (output) {
+        const lines = output.split('\n');
+        lines.forEach(line => {
+          if (line.includes('Flag:') || line.includes('CTF{')) {
+            addTerminalLine(line, 'success-line');
+          } else {
+            addTerminalLine(line, 'output-line');
+          }
+        });
+      }
     } else {
       addTerminalLine(`bash: command output simulated`, 'output-line');
-      addTerminalLine(`❌ Not quite right. Check the challenge requirements.`, 'error-line');
     }
+    addTerminalLine(`❌ Not quite right. Check the challenge requirements.`, 'error-line');
   }
 }
 
@@ -653,14 +660,15 @@ function simulateBanditCommand(cmd, ch) {
 }
 
 function executePipeline(cmd, ch) {
+  let baseCmd = evaluateSubshells(cmd, ch);
+
   const redirectRegex = /\s*(>>|>)\s*(\S+)\s*$/;
-  const redirectMatch = cmd.match(redirectRegex);
-  let baseCmd = cmd;
+  const redirectMatch = baseCmd.match(redirectRegex);
   let redirectOp = null;
   let redirectFile = null;
   
   if (redirectMatch) {
-    baseCmd = cmd.substring(0, redirectMatch.index);
+    baseCmd = baseCmd.substring(0, redirectMatch.index);
     redirectOp = redirectMatch[1];
     redirectFile = redirectMatch[2].replace(/['"]/g, '');
   }
@@ -675,7 +683,8 @@ function executePipeline(cmd, ch) {
     
     const parts = parseArguments(segment);
     const command = parts[0].toLowerCase();
-    const args = parts.slice(1);
+    const rawArgs = parts.slice(1);
+    const args = expandWildcards(rawArgs);
     
     const runResult = runVirtualCommand(command, args, pipedInput, ch);
     if (runResult.error) {
@@ -719,10 +728,11 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     const targetPath = args.filter(arg => !arg.startsWith('-'))[0] || '';
     
     const resolved = resolvePath(targetPath);
-    const dir = getFileSystemItem(resolved);
-    if (dir && typeof dir === 'object') {
+    const item = getFileSystemItem(resolved);
+    
+    if (item && typeof item === 'object') {
       let lines = [];
-      for (const [name, val] of Object.entries(dir)) {
+      for (const [name, val] of Object.entries(item)) {
         const isHidden = name.startsWith('.');
         if (isHidden && !hasA) continue;
         
@@ -746,25 +756,37 @@ function runVirtualCommand(command, args, pipedInput, ch) {
         }
       }
       return { output: lines.join('\n'), error: null };
+    } else if (item && typeof item === 'string') {
+      if (hasL) {
+        if (item.startsWith('[FILE]')) {
+          return { output: item.replace('[FILE] ', ''), error: null };
+        }
+        return { output: `-rw-r--r--  1 user user ${item.length}  ${targetPath}`, error: null };
+      }
+      return { output: targetPath, error: null };
     } else {
       return { output: '', error: `ls: cannot access '${targetPath}': No such file or directory` };
     }
   }
 
   if (command === 'cat') {
-    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    if (!targetFile || targetFile === '-') {
+    const targetFiles = args.filter(arg => !arg.startsWith('-'));
+    if (targetFiles.length === 0 || targetFiles.includes('-')) {
       return { output: pipedInput, error: null };
     }
-    const resolved = resolvePath(targetFile);
-    const content = getFileSystemItem(resolved);
-    if (content !== null && typeof content === 'string') {
-      return { output: content, error: null };
-    } else if (content !== null && typeof content === 'object') {
-      return { output: '', error: `cat: ${targetFile}: Is a directory` };
-    } else {
-      return { output: '', error: `cat: ${targetFile}: No such file or directory` };
+    let outputs = [];
+    for (const file of targetFiles) {
+      const resolved = resolvePath(file);
+      const content = getFileSystemItem(resolved);
+      if (content !== null && typeof content === 'string') {
+        outputs.push(content);
+      } else if (content !== null && typeof content === 'object') {
+        return { output: '', error: `cat: ${file}: Is a directory` };
+      } else {
+        return { output: '', error: `cat: ${file}: No such file or directory` };
+      }
     }
+    return { output: outputs.join('\n'), error: null };
   }
 
   if (command === 'grep' || command === 'zgrep') {
@@ -1111,6 +1133,17 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     }
     const resolved = resolvePath(scriptFile);
     const content = getFileSystemItem(resolved);
+
+    // Support Setuid reader binary simulation
+    if (scriptFile.endsWith('reader') && String(content).includes('setuid binary')) {
+      const targetFile = args[0];
+      if (targetFile === 'protected.txt' || targetFile === './protected.txt') {
+        return { output: ch.password, error: null };
+      } else {
+        return { output: '', error: `./reader: cannot read ${targetFile || ''}: Permission denied` };
+      }
+    }
+
     if (content && typeof content === 'string') {
       const scriptLines = content.split('\n');
       let scriptOutput = [];
@@ -1570,6 +1603,10 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     return { output: `Output: ${ch.password}`, error: null };
   }
 
+  if (command === 'nmap') {
+    return { output: simulateNmap(args, ch), error: null };
+  }
+
   return { output: `Executing: ${command} ${args.join(' ')}`, error: null };
 }
 
@@ -1586,6 +1623,137 @@ function simulatePing(cmd) {
   addTerminalLine(`1 packets transmitted, 1 received, 0% packet loss`, 'output-line');
   addTerminalLine(``, '');
   addTerminalLine(`❌ Correct target, but check the specific requirements.`, 'warning-line');
+}
+
+// ---- Simulate Nmap ----
+function simulateNmap(args, ch) {
+  if (args.length === 0) {
+    return `Nmap 7.92 ( https://nmap.org )
+Usage: nmap [Scan Type(s)] [Options] {target specification}
+EXAMPLES:
+  nmap -v -A scanme.nmap.org
+  nmap -sn 192.168.0.0/24
+  nmap -sV 10.0.0.1`;
+  }
+  
+  const target = args[args.length - 1];
+  const sV = args.includes('-sV');
+  const sn = args.includes('-sn');
+  const script = args.find(a => a.startsWith('--script'));
+  
+  if (sn) {
+    if (target.includes('/24') || target.includes('*')) {
+      const base = target.replace('/24', '').replace('*', '');
+      return `Starting Nmap 7.92 ( https://nmap.org )
+Nmap scan report for ${base}1
+Host is up (0.0024s latency).
+Nmap scan report for ${base}42
+Host is up (0.0035s latency).
+Nmap scan report for ${base}99
+Host is up (0.0019s latency).
+Nmap done: 256 IP addresses (3 hosts up) scanned in 2.10 seconds`;
+    }
+    return `Starting Nmap 7.92 ( https://nmap.org )
+Nmap scan report for ${target}
+Host is up (0.0012s latency).
+Nmap done: 1 IP address (1 host up) scanned in 0.15 seconds`;
+  }
+  
+  if (sV) {
+    if (script && script.includes('vuln')) {
+      return `Starting Nmap 7.92 ( https://nmap.org )
+Nmap scan report for ${target}
+Host is up (0.0050s latency).
+
+PORT    STATE  SERVICE
+80/tcp  open   http
+| http-vuln-cve2017-5638:
+|   VULNERABLE:
+|   Apache Struts Remote Code Execution
+443/tcp open   https
+| ssl-heartbleed:
+|   VULNERABLE:
+|   The Heartbleed Bug (CVE-2014-0160)
+
+Service detection performed. 2 services detected.
+Nmap done: 1 IP address (1 host up) scanned in 6.45 seconds`;
+    }
+    return `Starting Nmap 7.92 ( https://nmap.org )
+Nmap scan report for ${target}
+Host is up (0.0040s latency).
+
+PORT     STATE  SERVICE    VERSION
+22/tcp   open   ssh        OpenSSH 8.9p1 Ubuntu
+80/tcp   open   http       Apache/2.4.52
+443/tcp  open   ssl/http   nginx 1.18.0
+3306/tcp open   mysql      MySQL 8.0.28
+
+Service detection performed. 4 services detected.
+Nmap done: 1 IP address (1 host up) scanned in 5.20 seconds`;
+  }
+
+  return `Starting Nmap 7.92 ( https://nmap.org )
+Nmap scan report for ${target}
+Host is up (0.0030s latency).
+Not shown: 996 closed tcp ports (conn-refused)
+PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+443/tcp  open  https
+3306/tcp open  mysql
+
+Nmap done: 1 IP address (1 host up) scanned in 0.85 seconds`;
+}
+
+// ---- Subshell & Wildcard Expansion Helpers ----
+function evaluateSubshells(cmd, ch) {
+  let current = cmd;
+  let match;
+  while (match = current.match(/\$\(([^)]+)\)/)) {
+    const innerCmd = match[1];
+    const result = executePipeline(innerCmd, ch);
+    current = current.replace(match[0], result.trim().replace(/\s+/g, ' '));
+  }
+  return current;
+}
+
+function expandWildcards(args) {
+  const fs = state.activeFilesystem || {};
+  return args.reduce((acc, arg) => {
+    if (arg.includes('*') || arg.includes('?')) {
+      let dirPath = '';
+      let pattern = arg;
+      
+      const lastSlash = arg.lastIndexOf('/');
+      if (lastSlash !== -1) {
+        dirPath = arg.substring(0, lastSlash);
+        pattern = arg.substring(lastSlash + 1);
+      }
+      
+      const resolvedDir = resolvePath(dirPath);
+      const dir = getFileSystemItem(resolvedDir);
+      
+      if (dir && typeof dir === 'object') {
+        const regexStr = '^' + pattern.replace(/\./g, '\\.').replace(/\?/g, '.').replace(/\*/g, '.*') + '$';
+        const regex = new RegExp(regexStr);
+        
+        const matches = [];
+        for (const name of Object.keys(dir)) {
+          const cleanName = name.replace(/\/$/, '');
+          if (regex.test(cleanName)) {
+            if (cleanName.startsWith('.') && !pattern.startsWith('.')) continue;
+            matches.push(dirPath ? `${dirPath}/${cleanName}` : cleanName);
+          }
+        }
+        if (matches.length > 0) {
+          acc.push(...matches);
+          return acc;
+        }
+      }
+    }
+    acc.push(arg);
+    return acc;
+  }, []);
 }
 
 // ---- Pipeline & Argument Parsing Helpers ----
