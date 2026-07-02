@@ -654,6 +654,16 @@ function setupUnlockPasswordInput() {
       }
     });
   }
+  if (DOM.ctfFlagPanel) {
+    DOM.ctfFlagPanel.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+  if (DOM.banditUnlockPanel) {
+    DOM.banditUnlockPanel.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
 }
 
 // ---- CTF Challenge Processing ----
