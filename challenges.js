@@ -1823,17 +1823,16 @@ const CHALLENGES = {
       successMessage: '⏰ Cron job secret captured!'
     },
     {
-      id: 'ban-74', title: 'Level 73: SSH Key Passphrase', difficulty: 'medium', xp: 30,
-      description: 'An SSH private key has been left in the directory. The password is in the comment field of the corresponding public key.',
-      objective: 'Inspect SSH key files.',
-      hints: ['Check the .pub file.', 'The comment is at the end of the public key.'],
+      id: 'ban-74', title: 'Level 73: Curl to SSH', difficulty: 'medium', xp: 30,
+      description: 'The password for this level is stored on a remote server. Use curl to download the private key from "http://target.local/secret_key.pem" with the -O option, and then use ssh with the key to connect to localhost (ssh -i secret_key.pem bandit14@localhost).',
+      objective: 'Retrieve private key via HTTP and login using SSH.',
+      hints: ['curl -O http://target.local/secret_key.pem downloads the key.', 'ssh -i secret_key.pem bandit14@localhost connects to the server.'],
       password: 'tR5kN8mQ3wL7yP9v',
-      solutions: ['cat id_rsa.pub', 'cat id_rsa.pub | awk \'{print $3}\''],
+      solutions: ['ssh -i secret_key.pem bandit14@localhost'],
       filesystem: {
-        'id_rsa': '-----BEGIN RSA PRIVATE KEY-----\\n(encrypted key data)\\n-----END RSA PRIVATE KEY-----',
-        'id_rsa.pub': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ... tR5kN8mQ3wL7yP9v'
+        'hint.txt': 'Connect to http://target.local/secret_key.pem to retrieve the private key.'
       },
-      successMessage: '🔑 SSH key inspected!'
+      successMessage: '🔓 SSH authentication using curl-downloaded key successful!'
     },
     {
       id: 'ban-75', title: 'Level 74: Log Forensics', difficulty: 'medium', xp: 30,

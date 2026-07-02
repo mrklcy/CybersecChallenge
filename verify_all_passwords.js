@@ -391,7 +391,7 @@ banditChallenges.forEach((ch, idx) => {
     if (data) {
       calculatedPassword = decodeBase32(data);
     }
-  } else if (title.includes('Setuid Binary')) {
+  } else if (title.includes('Setuid Binary') || title.includes('Curl to SSH')) {
     calculatedPassword = expectedPassword;
   } else if (title.includes('Caesar Cipher')) {
     const data = findFileContent(filesystem, 'caesar.txt');

@@ -2,6 +2,28 @@
 // TERMINAL CHALLENGE — Application Logic
 // ============================================================================
 
+// ---- Virtual Network Configuration ----
+const VIRTUAL_NETWORK = {
+  'http://example.com/file.txt': 'This is a sample text file downloaded from example.com.',
+  'http://target.local': '<html><body><h1>Welcome to Target Local Intranet</h1><p>Public files are listed in <a href="/robots.txt">robots.txt</a></p></body></html>',
+  'http://target.local/robots.txt': 'User-agent: *\nDisallow: /secret_key.pem\nDisallow: /api/flag',
+  'http://target.local/secret_key.pem': `-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEA0YxpP59aVz5a2g2...
+[PRIVATE SSH KEY FOR bandit14]
+-----END RSA PRIVATE KEY-----`,
+  'http://target.local/api/flag': 'CTF{cUrl_h34d3r_s3cr3t}',
+  'http://localhost:8080': 'Welcome to internal dashboard!',
+  'http://localhost:8080/admin': 'Welcome to Admin console! Flag: CTF{ssrf_1nt3rn4l}',
+  'http://127.0.0.1:8080': 'Welcome to internal dashboard!',
+  'http://localhost:8080/internal': '{\n  "service": "Internal Dashboard",\n  "flag": "CTF{ssh_tunn3l}",\n  "status": "restricted"\n}',
+  'http://localhost:8080/internal/flag': 'Flag: CTF{ssrf_1nt3rn4l}',
+  'https://ctf-challenge-bucket.s3.amazonaws.com/': '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><Contents><Key>flag.txt</Key><Size>24</Size></Contents></ListBucketResult>',
+  'http://target.local/search': 'Reflected in page: search results... session=admin; flag=CTF{xss_4tt4ck}',
+  'http://target.local/profile': 'Hello! Flag: CTF{sst1_t3mpl4t3}',
+  'http://target.local/page.php': 'root:x:0:0:root:/root:/bin/bash\nctf_flag:x:1337:1337:CTF{lf1_4tt4ck}:/dev/null:/bin/false',
+  'http://target.local/ping': 'PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.\nCTF{cmd_1nj3ct10n}'
+};
+
 // ---- State ----
 const state = {
   currentCategory: 'command',
@@ -16,6 +38,7 @@ const state = {
   currentChallenge: null,
   activeFilesystem: null,
   currentDir: '', // path relative to home directory (~/)
+  sshTunnelActive: false,
   currentUser: null, // null means Guest
   currentAuthTab: 'signin',
   avatar: '👤',
@@ -103,6 +126,7 @@ function switchCategory(category) {
   state.currentChallengeIndex = -1;
   state.currentChallenge = null;
   state.currentDir = '';
+  state.sshTunnelActive = false;
 
   // Update tabs
   document.querySelectorAll('.category-tab').forEach(tab => {
@@ -237,6 +261,7 @@ function selectChallenge(index) {
   state.currentChallenge = challenges[index];
   state.hintIndex = 0;
   state.currentDir = '';
+  state.sshTunnelActive = false;
 
   if (state.currentChallenge.filesystem) {
     state.activeFilesystem = JSON.parse(JSON.stringify(state.currentChallenge.filesystem));
@@ -1601,6 +1626,102 @@ function runVirtualCommand(command, args, pipedInput, ch) {
 
   if (command === 'getfattr' || command === 'md5sum' || command === 'sha256sum') {
     return { output: `Output: ${ch.password}`, error: null };
+  }
+
+  if (command === 'curl' || command === 'wget') {
+    const isWget = command === 'wget';
+    const hasO = args.includes('-O') || args.includes('-o');
+    const hasI = args.includes('-I') || args.includes('--head');
+    
+    // Find URL in args
+    const url = args.find(a => a.includes('://') || a.includes('.local') || a.includes('localhost'));
+    if (!url) {
+      return { output: '', error: `${command}: URL or target required` };
+    }
+    
+    // Normalize url
+    let cleanUrl = url.replace(/['"]/g, '');
+    if (!cleanUrl.includes('://')) {
+      cleanUrl = 'http://' + cleanUrl;
+    }
+    
+    // Check local port forward tunnel for localhost:8080 or 127.0.0.1:8080
+    if (cleanUrl.includes('localhost:8080') || cleanUrl.includes('127.0.0.1:8080')) {
+      if (!state.sshTunnelActive) {
+        return { output: '', error: `${command}: (7) Failed to connect to ${url}: Connection refused` };
+      }
+    }
+    
+    const content = VIRTUAL_NETWORK[cleanUrl];
+    if (content === undefined) {
+      return { output: '', error: `${command}: (7) Failed to connect to ${url}: Connection refused` };
+    }
+    
+    if (hasI) {
+      return {
+        output: `HTTP/1.1 200 OK\nDate: Thu, 02 Jul 2026 12:00:00 GMT\nServer: Apache/2.4.52 (Ubuntu)\nContent-Type: text/html\nContent-Length: ${content.length}\nConnection: close`,
+        error: null
+      };
+    }
+    
+    if (hasO || isWget) {
+      // Extract filename from URL
+      const parts = cleanUrl.split('/');
+      let filename = parts[parts.length - 1] || 'index.html';
+      if (filename.includes('?')) {
+        filename = filename.substring(0, filename.indexOf('?'));
+      }
+      
+      const resolved = resolvePath(filename);
+      writeToVirtualFS(resolved, content, false);
+      return { output: `Saving to: ‘${filename}’\n[=====================================>] ${content.length} B  --.-KB/s in 0s\nDownloaded and saved successfully.`, error: null };
+    }
+    
+    return { output: content, error: null };
+  }
+
+  if (command === 'ssh') {
+    const iFlagIndex = args.indexOf('-i');
+    const keyFile = iFlagIndex !== -1 ? args[iFlagIndex + 1] : null;
+    const dest = args.find(a => a !== '-i' && a !== keyFile && !a.startsWith('-'));
+    const isL = args.includes('-L');
+    
+    if (isL) {
+      // Setup port forward
+      const forwardArgIndex = args.indexOf('-L') + 1;
+      const forwardArg = args[forwardArgIndex];
+      const targetDest = args.find(a => a !== '-L' && a !== forwardArg && !a.startsWith('-'));
+      
+      if (forwardArg && targetDest) {
+        state.sshTunnelActive = true;
+        return { output: `Tunnel established: ${forwardArg}\nForwarding port successfully in background.`, error: null };
+      }
+    }
+    
+    if (!dest) {
+      return { output: '', error: 'ssh: destination required (e.g. user@host)' };
+    }
+    
+    if (!keyFile) {
+      return { output: '', error: `ssh: Connection closed: Permission denied (publickey).` };
+    }
+    
+    const resolvedKey = resolvePath(keyFile);
+    const keyContent = getFileSystemItem(resolvedKey);
+    
+    if (!keyContent) {
+      return { output: '', error: `Warning: Identity file ${keyFile} not accessible: No such file or directory.` };
+    }
+    
+    const isPrivateKey = String(keyContent).includes('-----BEGIN RSA PRIVATE KEY-----') || String(keyContent).includes('[PRIVATE SSH KEY FOR bandit14]');
+    if (!isPrivateKey) {
+      return { output: '', error: `Load key "${keyFile}": invalid format` };
+    }
+    
+    return {
+      output: `ssh: Connected to localhost.\nssh: Authenticating with key '${keyFile}'...\n\nWelcome to Bandit level 14!\n\nHere is your next password:\n${ch.password}`,
+      error: null
+    };
   }
 
   if (command === 'nmap') {
