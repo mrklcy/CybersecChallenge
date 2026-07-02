@@ -164,6 +164,18 @@
           </button>
         </div>
 
+        <!-- CTF Flag Submission Panel -->
+        <div class="ctf-flag-panel" id="ctf-flag-panel" style="display: none;">
+          <div class="ctf-flag-row">
+            <input type="text" class="ctf-flag-input" id="ctf-flag-input"
+              placeholder="Submit Flag (e.g. CTF{...})" autocomplete="off" spellcheck="false">
+            <button class="btn btn-flag-submit" id="btn-flag-submit" onclick="submitCtfFlag()">
+              <span>🚩</span> Submit Flag
+            </button>
+          </div>
+          <div class="ctf-flag-feedback" id="ctf-flag-feedback"></div>
+        </div>
+
         <!-- Bandit Level Unlock Panel (hidden by default) -->
         <div class="bandit-unlock-panel" id="bandit-unlock-panel" style="display: none;">
           <div class="unlock-card animate-fade-in">

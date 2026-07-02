@@ -2656,4 +2656,75 @@ body::after {
   max-width: 360px !important;
 }
 
+/* ============================================================================
+   CTF FLAG SUBMISSION PANEL
+   ============================================================================ */
+.ctf-flag-panel {
+  margin-top: 15px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 0, 127, 0.25);
+  border-radius: var(--radius-md);
+  padding: 15px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ctf-flag-row {
+  display: flex;
+  gap: 10px;
+}
+
+.ctf-flag-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 0, 127, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  transition: all var(--transition-normal);
+}
+
+.ctf-flag-input:focus {
+  outline: none;
+  border-color: var(--neon-magenta);
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.2);
+}
+
+.btn-flag-submit {
+  background: linear-gradient(135deg, #ff007f, #b30059);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  padding: 0 20px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-normal);
+}
+
+.btn-flag-submit:hover {
+  background: linear-gradient(135deg, #ff3399, #d6006e);
+  transform: translateY(-1px);
+}
+
+.ctf-flag-feedback {
+  font-size: 0.9rem;
+  min-height: 18px;
+  transition: all 0.2s ease;
+}
+
+.ctf-flag-feedback.correct {
+  color: #00ff66;
+}
+
+.ctf-flag-feedback.incorrect {
+  color: #ff3366;
+}
+
 

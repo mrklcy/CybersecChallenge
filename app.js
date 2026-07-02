@@ -79,6 +79,9 @@ const DOM = {
   banditUnlockPanel: document.getElementById('bandit-unlock-panel'),
   unlockPasswordInput: document.getElementById('unlock-password-input'),
   unlockFeedback: document.getElementById('unlock-feedback'),
+  ctfFlagPanel: document.getElementById('ctf-flag-panel'),
+  ctfFlagInput: document.getElementById('ctf-flag-input'),
+  ctfFlagFeedback: document.getElementById('ctf-flag-feedback'),
   profileWidget: document.getElementById('profile-widget'),
   profileName: document.getElementById('profile-name'),
   profileRank: document.getElementById('profile-rank'),
@@ -317,6 +320,16 @@ function selectChallenge(index) {
     DOM.btnNext.style.display = (isCompleted || isBandit) ? '' : 'none';
     DOM.btnHint.style.display = isCompleted ? 'none' : '';
 
+    // Show CTF flag panel if ctf and not completed
+    if (state.currentCategory === 'ctf') {
+      DOM.ctfFlagPanel.style.display = isCompleted ? 'none' : 'block';
+      DOM.ctfFlagInput.value = '';
+      DOM.ctfFlagFeedback.textContent = '';
+      DOM.ctfFlagFeedback.className = 'ctf-flag-feedback';
+    } else {
+      DOM.ctfFlagPanel.style.display = 'none';
+    }
+
     // Clear terminal & show challenge intro
     clearTerminal();
     addTerminalLine(`── Challenge ${index + 1}: ${ch.title} ──`, 'info-line');
@@ -521,6 +534,37 @@ function processBanditChallenge(cmd) {
   }
 }
 
+// ---- Submit CTF Flag ----
+function submitCtfFlag() {
+  const input = DOM.ctfFlagInput.value.trim();
+  if (!input) {
+    DOM.ctfFlagFeedback.textContent = '⚠️ Please enter a flag.';
+    DOM.ctfFlagFeedback.className = 'ctf-flag-feedback incorrect';
+    return;
+  }
+  
+  const ch = state.currentChallenge;
+  if (!ch) return;
+  
+  const clean = (str) => str.trim().toLowerCase().replace(/\s+/g, '');
+  const expectedFlag = ch.flag || '';
+  
+  if (clean(input) === clean(expectedFlag)) {
+    DOM.ctfFlagFeedback.textContent = '✅ Correct flag! Challenge completed!';
+    DOM.ctfFlagFeedback.className = 'ctf-flag-feedback correct';
+    
+    // Complete the current CTF challenge
+    completeChallenge();
+  } else {
+    DOM.ctfFlagFeedback.textContent = '❌ Incorrect flag. Try again!';
+    DOM.ctfFlagFeedback.className = 'ctf-flag-feedback incorrect shake';
+    
+    setTimeout(() => {
+      DOM.ctfFlagFeedback.classList.remove('shake');
+    }, 400);
+  }
+}
+
 // ---- Submit Unlock Password (from the locked view) ----
 function submitUnlockPassword() {
   const input = DOM.unlockPasswordInput.value.trim();
@@ -602,6 +646,14 @@ function setupUnlockPasswordInput() {
       submitUnlockPassword();
     }
   });
+  if (DOM.ctfFlagInput) {
+    DOM.ctfFlagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitCtfFlag();
+      }
+    });
+  }
 }
 
 // ---- CTF Challenge Processing ----
@@ -636,7 +688,6 @@ function processCTFChallenge(cmd) {
     if (ch.flag) {
       addTerminalLine(`\n🚩 FLAG: ${ch.flag}`, 'success-line');
     }
-    completeChallenge();
   } else {
     const lower = cmd.toLowerCase().trim();
     if (lower.startsWith('ping') || lower.startsWith('nmap') || lower.startsWith('traceroute') || lower.startsWith('tracert')) {
@@ -2150,6 +2201,11 @@ function completeChallenge() {
   // Show next button
   DOM.btnNext.style.display = '';
   DOM.btnHint.style.display = 'none';
+
+  // Hide CTF Flag panel on completion
+  if (DOM.ctfFlagPanel) {
+    DOM.ctfFlagPanel.style.display = 'none';
+  }
 }
 
 function closeSuccess() {
