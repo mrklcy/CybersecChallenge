@@ -15,6 +15,7 @@ const state = {
   hintIndex: 0,
   currentChallenge: null,
   activeFilesystem: null,
+  currentDir: '', // path relative to home directory (~/)
   currentUser: null, // null means Guest
   currentAuthTab: 'signin',
   avatar: '👤',
@@ -101,6 +102,7 @@ function switchCategory(category) {
   state.currentCategory = category;
   state.currentChallengeIndex = -1;
   state.currentChallenge = null;
+  state.currentDir = '';
 
   // Update tabs
   document.querySelectorAll('.category-tab').forEach(tab => {
@@ -234,6 +236,7 @@ function selectChallenge(index) {
   state.currentChallengeIndex = index;
   state.currentChallenge = challenges[index];
   state.hintIndex = 0;
+  state.currentDir = '';
 
   if (state.currentChallenge.filesystem) {
     state.activeFilesystem = JSON.parse(JSON.stringify(state.currentChallenge.filesystem));
@@ -315,6 +318,7 @@ function selectChallenge(index) {
 
     // Focus terminal
     DOM.terminalInput.focus();
+    updatePrompt();
   }
 
   // Update list
@@ -433,6 +437,7 @@ function processCommand(cmd) {
   } else if (category === 'ctf') {
     processCTFChallenge(cmd);
   }
+  updatePrompt();
 }
 
 // ---- Command Challenge Processing ----
@@ -691,31 +696,49 @@ function executePipeline(cmd, ch) {
 
 function runVirtualCommand(command, args, pipedInput, ch) {
   const fs = state.activeFilesystem || {};
+
+  if (command === 'cd') {
+    const target = args[0] || '~';
+    const resolved = resolvePath(target);
+    const item = getFileSystemItem(resolved);
+    if (resolved === '' || (item && typeof item === 'object')) {
+      state.currentDir = resolved;
+      return { output: '', error: null };
+    } else {
+      return { output: '', error: `cd: ${target}: No such file or directory` };
+    }
+  }
+
+  if (command === 'pwd') {
+    return { output: `/home/user${state.currentDir ? '/' + state.currentDir : ''}`, error: null };
+  }
   
   if (command === 'ls') {
     const hasA = args.some(arg => arg.startsWith('-') && arg.includes('a'));
     const hasL = args.some(arg => arg.startsWith('-') && arg.includes('l'));
     const targetPath = args.filter(arg => !arg.startsWith('-'))[0] || '';
     
-    const dir = targetPath ? navigateFS(fs, targetPath) : fs;
+    const resolved = resolvePath(targetPath);
+    const dir = getFileSystemItem(resolved);
     if (dir && typeof dir === 'object') {
       let lines = [];
       for (const [name, val] of Object.entries(dir)) {
         const isHidden = name.startsWith('.');
         if (isHidden && !hasA) continue;
         
-        if (typeof val === 'object' && name.endsWith('/')) {
+        if (name.endsWith('/')) {
           if (hasL) {
             lines.push(`drwxr-xr-x  2 user user 4096  ${name}`);
           } else {
             lines.push(name);
           }
-        } else if (typeof val === 'string') {
+        } else {
           if (hasL) {
-            if (val.startsWith('[FILE]')) {
+            const size = typeof val === 'string' ? val.length : 0;
+            if (typeof val === 'string' && val.startsWith('[FILE]')) {
               lines.push(val.replace('[FILE] ', ''));
             } else {
-              lines.push(`-rw-r--r--  1 user user ${val.length}  ${name}`);
+              lines.push(`-rw-r--r--  1 user user ${size}  ${name}`);
             }
           } else {
             lines.push(name);
@@ -733,7 +756,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     if (!targetFile || targetFile === '-') {
       return { output: pipedInput, error: null };
     }
-    const content = findInFS(fs, targetFile);
+    const resolved = resolvePath(targetFile);
+    const content = getFileSystemItem(resolved);
     if (content !== null && typeof content === 'string') {
       return { output: content, error: null };
     } else if (content !== null && typeof content === 'object') {
@@ -743,10 +767,10 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     }
   }
 
-  if (command === 'grep') {
+  if (command === 'grep' || command === 'zgrep') {
     const flags = args.filter(arg => arg.startsWith('-'));
     const nonFlags = args.filter(arg => !arg.startsWith('-'));
-    const pattern = nonFlags[0];
+    const pattern = nonFlags[0] ? nonFlags[0].replace(/['"]/g, '') : '';
     const targetFile = nonFlags[1];
     
     if (!pattern) {
@@ -755,7 +779,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     
     let content = '';
     if (targetFile) {
-      const fileVal = findInFS(fs, targetFile);
+      const resolved = resolvePath(targetFile);
+      const fileVal = getFileSystemItem(resolved);
       if (fileVal === null) {
         return { output: '', error: `grep: ${targetFile}: No such file or directory` };
       }
@@ -764,10 +789,13 @@ function runVirtualCommand(command, args, pipedInput, ch) {
       content = pipedInput;
     }
     
-    const lines = content.split('\n');
+    let lines = content.split('\n');
+    const isCaseInsensitive = flags.some(f => f.includes('i'));
+    const isInverted = flags.some(f => f.includes('v'));
+    
     const matched = lines.filter(line => {
-      const matchCase = flags.some(f => f.includes('i')) ? line.toLowerCase().includes(pattern.toLowerCase()) : line.includes(pattern);
-      return matchCase;
+      let isMatch = isCaseInsensitive ? line.toLowerCase().includes(pattern.toLowerCase()) : line.includes(pattern);
+      return isInverted ? !isMatch : isMatch;
     });
     return { output: matched.join('\n'), error: null };
   }
@@ -776,17 +804,22 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     const hasL = args.includes('-l');
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
     
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
+    
     if (content === null) {
       return { output: '', error: `wc: ${targetFile}: No such file or directory` };
     }
     content = String(content);
     
     if (hasL) {
-      const lineCount = content ? content.split('\n').length : 0;
+      const lineCount = content ? content.split('\n').filter(Boolean).length : 0;
       return { output: String(lineCount), error: null };
     } else {
-      const lines = content ? content.split('\n').length : 0;
+      const lines = content ? content.split('\n').filter(Boolean).length : 0;
       const words = content ? content.split(/\s+/).filter(Boolean).length : 0;
       const chars = content ? content.length : 0;
       return { output: `${lines} ${words} ${chars}`, error: null };
@@ -795,7 +828,11 @@ function runVirtualCommand(command, args, pipedInput, ch) {
 
   if (command === 'rev') {
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
     if (content === null) {
       return { output: '', error: `rev: ${targetFile}: No such file or directory` };
     }
@@ -804,36 +841,67 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     return { output: reversed, error: null };
   }
 
-  if (command === 'base64') {
+  if (command === 'base64' || command === 'base32') {
     const decode = args.includes('-d') || args.includes('--decode');
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
     if (content === null) {
-      return { output: '', error: `base64: ${targetFile}: No such file or directory` };
+      return { output: '', error: `${command}: ${targetFile}: No such file or directory` };
     }
     content = String(content).trim();
     if (decode) {
       try {
-        const decoded = atob(content);
-        return { output: decoded, error: null };
+        if (command === 'base64') {
+          return { output: atob(content), error: null };
+        } else {
+          return { output: ch.password || 'Decoded base32 content', error: null };
+        }
       } catch (e) {
-        return { output: '', error: 'base64: invalid input' };
+        return { output: '', error: `${command}: invalid input` };
       }
     } else {
-      const encoded = btoa(content);
-      return { output: encoded, error: null };
+      try {
+        if (command === 'base64') {
+          return { output: btoa(content), error: null };
+        } else {
+          return { output: 'b32_encoded_placeholder', error: null };
+        }
+      } catch (e) {
+        return { output: '', error: `${command}: encoding failed` };
+      }
     }
   }
 
   if (command === 'xxd') {
     const revert = args.includes('-r');
     const plain = args.includes('-p');
-    const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    const skipArg = args.find(a => a.startsWith('-s'));
+    const lenArg = args.find(a => a.startsWith('-l'));
+    
+    let skip = 0;
+    if (skipArg) {
+      const skipIndex = args.indexOf(skipArg);
+      let val = skipArg.length > 2 ? skipArg.substring(2) : args[skipIndex + 1];
+      if (val) {
+        skip = val.startsWith('0x') ? parseInt(val, 16) : parseInt(val);
+      }
+    }
+    
+    const targetFile = args.filter(arg => !arg.startsWith('-') && arg !== String(skip))[0];
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
     if (content === null) {
       return { output: '', error: `xxd: ${targetFile}: No such file or directory` };
     }
     content = String(content);
+    
     if (revert) {
       if (plain) {
         try {
@@ -850,6 +918,9 @@ function runVirtualCommand(command, args, pipedInput, ch) {
         return { output: ch.password || 'Decoded content', error: null };
       }
     } else {
+      if (skip > 0) {
+        return { output: content.substring(skip), error: null };
+      }
       return { output: content, error: null };
     }
   }
@@ -857,7 +928,11 @@ function runVirtualCommand(command, args, pipedInput, ch) {
   if (command === 'sort') {
     const hasU = args.includes('-u');
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
     if (content === null) {
       return { output: '', error: `sort: ${targetFile}: No such file or directory` };
     }
@@ -873,7 +948,11 @@ function runVirtualCommand(command, args, pipedInput, ch) {
   if (command === 'uniq') {
     const hasU = args.includes('-u');
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
     if (content === null) {
       return { output: '', error: `uniq: ${targetFile}: No such file or directory` };
     }
@@ -899,7 +978,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0] || '';
     if (targetFile.endsWith('*')) {
       const dirPath = targetFile.replace('*', '') || '.';
-      const dir = navigateFS(fs, dirPath) || fs;
+      const resolved = resolvePath(dirPath);
+      const dir = getFileSystemItem(resolved);
       if (typeof dir === 'object') {
         let lines = [];
         for (const [name, val] of Object.entries(dir)) {
@@ -914,7 +994,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
         return { output: lines.join('\n'), error: null };
       }
     }
-    const content = findInFS(fs, targetFile);
+    const resolved = resolvePath(targetFile);
+    const content = getFileSystemItem(resolved);
     if (content !== null && typeof content === 'string') {
       if (content.startsWith('\x00') || content.startsWith('\x7f') || content.startsWith('\x89') || content.startsWith('\xff') || content.startsWith('\x1f')) {
         return { output: `${targetFile}: data`, error: null };
@@ -927,7 +1008,11 @@ function runVirtualCommand(command, args, pipedInput, ch) {
 
   if (command === 'strings') {
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
     if (content === null) {
       return { output: '', error: `strings: ${targetFile}: No such file or directory` };
     }
@@ -952,7 +1037,11 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     }
     
     const targetFile = args.find(arg => !arg.startsWith('-') && arg !== String(num));
-    let content = targetFile ? findInFS(fs, targetFile) : pipedInput;
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
     if (content === null) {
       return { output: '', error: `head/tail: target not found` };
     }
@@ -962,14 +1051,18 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     return { output: selected.join('\n'), error: null };
   }
 
-  if (command === 'echo') {
-    const text = args.join(' ');
+  if (command === 'echo' || command === 'printf') {
+    let text = args.join(' ').replace(/^["']|["']$/g, '');
+    if (command === 'printf') {
+      text = text.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+    }
     return { output: text, error: null };
   }
 
   if (command === 'stat') {
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
-    const content = findInFS(fs, targetFile);
+    const resolved = resolvePath(targetFile);
+    const content = getFileSystemItem(resolved);
     if (content !== null && typeof content === 'string') {
       if (content.includes('[PERMS:') || content.includes('[MTIME:')) {
         return { output: `${targetFile}: ${content}`, error: null };
@@ -982,7 +1075,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
   if (command === 'touch') {
     const targetFile = args[0];
     if (targetFile) {
-      writeToVirtualFS(targetFile, '', false);
+      const resolved = resolvePath(targetFile);
+      writeToVirtualFS(resolved, '', false);
     }
     return { output: '', error: null };
   }
@@ -990,7 +1084,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
   if (command === 'mkdir') {
     const targetDir = args[0];
     if (targetDir) {
-      const cleanPath = targetDir.replace(/^\.\//, '').replace(/\/$/, '') + '/';
+      const resolved = resolvePath(targetDir);
+      const cleanPath = resolved.replace(/\/$/, '') + '/';
       writeToVirtualFS(cleanPath, {}, false);
     }
     return { output: '', error: null };
@@ -999,7 +1094,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
   if (command === 'rm') {
     const targetFile = args.filter(arg => !arg.startsWith('-'))[0];
     if (targetFile) {
-      removeFromVirtualFS(targetFile);
+      const resolved = resolvePath(targetFile);
+      removeFromVirtualFS(resolved);
     }
     return { output: '', error: null };
   }
@@ -1013,7 +1109,8 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     if (!scriptFile) {
       return { output: '', error: 'bash: script expected' };
     }
-    const content = findInFS(fs, scriptFile);
+    const resolved = resolvePath(scriptFile);
+    const content = getFileSystemItem(resolved);
     if (content && typeof content === 'string') {
       const scriptLines = content.split('\n');
       let scriptOutput = [];
@@ -1031,7 +1128,445 @@ function runVirtualCommand(command, args, pipedInput, ch) {
     return { output: '', error: `bash: ${scriptFile}: No such file or directory` };
   }
 
-  if (command === 'sqlite3' || command === 'openssl' || command === 'dig' || command === 'nslookup' || command === 'zcat' || command === 'gunzip' || command === 'getfattr' || command === 'md5sum' || command === 'sha256sum' || command === 'printf') {
+  if (command === 'tr') {
+    const set1 = args[0];
+    const set2 = args[1];
+    if (!set1 || !set2) {
+      return { output: pipedInput, error: null };
+    }
+    const buildSet = (s) => {
+      let res = '';
+      for (let i = 0; i < s.length; i++) {
+        if (s[i] === '-' && i > 0 && i < s.length - 1) {
+          const start = s.charCodeAt(i - 1);
+          const end = s.charCodeAt(i + 1);
+          for (let c = start + 1; c < end; c++) {
+            res += String.fromCharCode(c);
+          }
+        } else {
+          res += s[i];
+        }
+      }
+      return res;
+    };
+    const s1 = buildSet(set1.replace(/['"]/g, ''));
+    const s2 = buildSet(set2.replace(/['"]/g, ''));
+    const translated = pipedInput.split('').map(c => {
+      const idx = s1.indexOf(c);
+      return idx !== -1 && s2[idx] ? s2[idx] : c;
+    }).join('');
+    return { output: translated, error: null };
+  }
+
+  if (command === 'cut') {
+    const dFlag = args.find(a => a.startsWith('-d'));
+    const fFlag = args.find(a => a.startsWith('-f'));
+    let delim = '\t';
+    if (dFlag) {
+      const dIndex = args.indexOf(dFlag);
+      if (dFlag.length > 2) {
+        delim = dFlag.substring(2).replace(/['"]/g, '');
+      } else if (args[dIndex + 1]) {
+        delim = args[dIndex + 1].replace(/['"]/g, '');
+      }
+    }
+    let field = 1;
+    if (fFlag) {
+      const fIndex = args.indexOf(fFlag);
+      if (fFlag.length > 2) {
+        field = parseInt(fFlag.substring(2)) || 1;
+      } else if (args[fIndex + 1]) {
+        field = parseInt(args[fIndex + 1]) || 1;
+      }
+    }
+    
+    const targetFile = args.find(a => !a.startsWith('-') && a !== delim && a !== String(field));
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
+    if (content === null) {
+      return { output: '', error: `cut: ${targetFile}: No such file or directory` };
+    }
+    content = String(content);
+    
+    const lines = content.split('\n').map(line => {
+      const parts = line.split(delim);
+      return parts[field - 1] || '';
+    });
+    return { output: lines.join('\n'), error: null };
+  }
+
+  if (command === 'awk') {
+    const script = args.find(arg => arg.includes('{'));
+    if (!script) {
+      return { output: pipedInput, error: null };
+    }
+    
+    const targetFile = args.find(a => !a.startsWith('-') && a !== script);
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
+    if (content === null) {
+      return { output: '', error: `awk: ${targetFile}: No such file or directory` };
+    }
+    content = String(content);
+    const lines = content.split('\n');
+    
+    const printMatch = script.match(/\{print\s+([^}]+)\}/);
+    if (printMatch) {
+      const fields = printMatch[1].split(/[\s,]+/).filter(Boolean);
+      const outputLines = lines.map(line => {
+        const parts = line.trim().split(/\s+/);
+        return fields.map(f => {
+          if (f.startsWith('$')) {
+            const idx = parseInt(f.substring(1));
+            return parts[idx - 1] || '';
+          }
+          return f.replace(/['"]/g, '');
+        }).join(' ');
+      });
+      return { output: outputLines.join('\n'), error: null };
+    }
+    
+    const sumMatch = script.match(/\{s\+=\$(\d+)\}\s*END\s*\{\s*print\s+s\s*\}/);
+    if (sumMatch) {
+      const col = parseInt(sumMatch[1]);
+      let total = 0;
+      lines.forEach(line => {
+        const parts = line.trim().split(/\s+/);
+        const val = parseFloat(parts[col - 1]) || 0;
+        total += val;
+      });
+      return { output: String(total), error: null };
+    }
+    
+    return { output: content, error: null };
+  }
+
+  if (command === 'sed') {
+    const script = args.find(arg => arg.startsWith('s/'));
+    if (!script) {
+      return { output: pipedInput, error: null };
+    }
+    
+    const sedParts = script.split('/');
+    const search = sedParts[1];
+    const replace = sedParts[2];
+    const flags = sedParts[3] || '';
+    
+    const targetFile = args.find(a => !a.startsWith('-') && a !== script);
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
+    if (content === null) {
+      return { output: '', error: `sed: ${targetFile}: No such file or directory` };
+    }
+    content = String(content);
+    
+    const regex = new RegExp(search, flags.includes('g') ? 'g' : '');
+    const replaced = content.split('\n').map(line => line.replace(regex, replace)).join('\n');
+    return { output: replaced, error: null };
+  }
+
+  if (command === 'comm' || command === 'diff') {
+    const files = args.filter(a => !a.startsWith('-'));
+    const file1 = files[0];
+    const file2 = files[1];
+    if (!file1 || !file2) {
+      return { output: '', error: `${command}: two files expected` };
+    }
+    const resolved1 = resolvePath(file1);
+    const resolved2 = resolvePath(file2);
+    const val1 = getFileSystemItem(resolved1);
+    const val2 = getFileSystemItem(resolved2);
+    if (val1 === null || val2 === null) {
+      return { output: '', error: `${command}: file not found` };
+    }
+    const lines1 = String(val1).split('\n').filter(Boolean);
+    const lines2 = String(val2).split('\n').filter(Boolean);
+    
+    if (command === 'comm') {
+      const has23 = args.includes('-23');
+      if (has23) {
+        const diffLines = lines1.filter(l => !lines2.includes(l));
+        return { output: diffLines.join('\n'), error: null };
+      }
+    } else {
+      const diffLines = [];
+      lines1.forEach(l => {
+        if (!lines2.includes(l)) diffLines.push(`< ${l}`);
+      });
+      lines2.forEach(l => {
+        if (!lines1.includes(l)) diffLines.push(`> ${l}`);
+      });
+      return { output: diffLines.join('\n'), error: null };
+    }
+  }
+
+  if (command === 'find') {
+    const hasType = args.indexOf('-type');
+    const hasName = args.indexOf('-name');
+    const hasSize = args.indexOf('-size');
+    const hasEmpty = args.includes('-empty');
+    const hasUser = args.indexOf('-user');
+    const hasGroup = args.indexOf('-group');
+    const hasMmin = args.indexOf('-mmin');
+    
+    const targetDir = args.filter(a => !a.startsWith('-') && 
+      (hasType === -1 || args[hasType + 1] !== a) &&
+      (hasName === -1 || args[hasName + 1] !== a) &&
+      (hasSize === -1 || args[hasSize + 1] !== a) &&
+      (hasUser === -1 || args[hasUser + 1] !== a) &&
+      (hasGroup === -1 || args[hasGroup + 1] !== a) &&
+      (hasMmin === -1 || args[hasMmin + 1] !== a)
+    )[0] || '.';
+    
+    const resolvedStart = resolvePath(targetDir);
+    const rootItem = getFileSystemItem(resolvedStart);
+    if (!rootItem) {
+      return { output: '', error: `find: ${targetDir}: No such file or directory` };
+    }
+    
+    const results = flattenFS(rootItem, targetDir);
+    const filtered = [];
+    
+    results.forEach(({ path, content, isDir }) => {
+      let match = true;
+      
+      if (hasType !== -1) {
+        const type = args[hasType + 1];
+        if (type === 'f' && isDir) match = false;
+        if (type === 'd' && !isDir) match = false;
+      }
+      
+      if (hasName !== -1) {
+        const namePattern = args[hasName + 1].replace(/['"]/g, '').replace(/\*/g, '.*');
+        const fileName = path.split('/').pop();
+        if (!new RegExp(`^${namePattern}$`).test(fileName)) match = false;
+      }
+      
+      if (hasSize !== -1) {
+        const sizeArg = args[hasSize + 1];
+        let bytes = parseInt(sizeArg);
+        if (sizeArg.endsWith('c')) {
+          bytes = parseInt(sizeArg.slice(0, -1));
+        }
+        if (typeof content !== 'string' || content.length !== bytes) match = false;
+      }
+      
+      if (hasEmpty) {
+        if (isDir) {
+          match = false;
+        } else if (typeof content === 'string' && content.length > 0) {
+          match = false;
+        }
+      }
+      
+      if (hasUser !== -1) {
+        const user = args[hasUser + 1];
+        if (typeof content === 'string' && !content.includes(`[USER:${user}]`)) match = false;
+      }
+      
+      if (hasGroup !== -1) {
+        const group = args[hasGroup + 1];
+        if (typeof content === 'string' && !content.includes(`[GROUP:${group}]`)) match = false;
+      }
+      
+      if (hasMmin !== -1) {
+        const mminArg = args[hasMmin + 1];
+        if (typeof content === 'string' && !content.includes(`[MTIME:${mminArg}]`)) match = false;
+      }
+      
+      if (match) {
+        filtered.push(path);
+      }
+    });
+    return { output: filtered.join('\n'), error: null };
+  }
+
+  if (command === 'tar') {
+    const extract = args.includes('-xf') || args.some(a => a.startsWith('-') && a.includes('x'));
+    const list = args.includes('-tf') || args.some(a => a.startsWith('-') && a.includes('t'));
+    const targetFile = args.find(a => !a.startsWith('-'));
+    if (!targetFile) {
+      return { output: '', error: 'tar: archive file expected' };
+    }
+    const resolved = resolvePath(targetFile);
+    const content = getFileSystemItem(resolved);
+    if (!content) {
+      return { output: '', error: `tar: ${targetFile}: No such file or directory` };
+    }
+    
+    if (String(content).includes('[TAR]')) {
+      const inner = String(content).replace('[TAR]', '').trim();
+      const files = inner.split('\n').map(line => {
+        const splitIdx = line.indexOf(':');
+        const name = line.substring(0, splitIdx).trim();
+        const body = line.substring(splitIdx + 1).trim();
+        return { name, body };
+      });
+      
+      if (list) {
+        return { output: files.map(f => f.name).join('\n'), error: null };
+      }
+      if (extract) {
+        files.forEach(f => {
+          const resPath = resolvePath(f.name);
+          writeToVirtualFS(resPath, f.body, false);
+        });
+        return { output: 'Extracted files successfully', error: null };
+      }
+    }
+    return { output: 'Archive operation complete', error: null };
+  }
+
+  if (command === 'gzip' || command === 'gunzip' || command === 'zcat') {
+    const targetFile = args.find(a => !a.startsWith('-'));
+    let content = pipedInput;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      content = getFileSystemItem(resolved);
+    }
+    if (content === null) {
+      return { output: '', error: `${command}: target file not found` };
+    }
+    
+    content = String(content);
+    const isCompressed = content.startsWith('[COMPRESSED]') || content.includes('[GZIP');
+    
+    if (command === 'gunzip') {
+      if (isCompressed) {
+        const decompressed = content.replace('[COMPRESSED] ', '').replace(/\[GZIP\s*|\]/g, '');
+        if (targetFile) {
+          const resolved = resolvePath(targetFile);
+          writeToVirtualFS(resolved.replace('.gz', ''), decompressed, false);
+          removeFromVirtualFS(resolved);
+        }
+        return { output: '', error: null };
+      }
+      return { output: '', error: 'gunzip: not in gzip format' };
+    }
+    
+    if (command === 'zcat') {
+      if (isCompressed) {
+        const decompressed = content.replace('[COMPRESSED] ', '').replace(/\[GZIP\s*|\]/g, '');
+        return { output: decompressed, error: null };
+      }
+      return { output: content, error: null };
+    }
+    
+    const compressed = `[COMPRESSED] ${content}`;
+    if (targetFile) {
+      const resolved = resolvePath(targetFile);
+      writeToVirtualFS(resolved + '.gz', compressed, false);
+      removeFromVirtualFS(resolved);
+    }
+    return { output: compressed, error: null };
+  }
+
+  if (command === 'sqlite3') {
+    const query = args.find(a => a.includes('SELECT') || a.includes('select'));
+    const targetFile = args.find(a => a.endsWith('.db') || a.endsWith('.sqlite'));
+    if (!targetFile) {
+      return { output: '', error: 'sqlite3: database file expected' };
+    }
+    const resolved = resolvePath(targetFile);
+    const content = getFileSystemItem(resolved);
+    if (!content) {
+      return { output: '', error: `sqlite3: ${targetFile}: No such file or directory` };
+    }
+    
+    if (query) {
+      const tableMatch = query.match(/FROM\s+(\w+)/i);
+      const tableName = tableMatch ? tableMatch[1] : '';
+      if (String(content).includes(`TABLE: ${tableName}`)) {
+        const lines = String(content).split('\n');
+        const rows = lines.filter(l => l.startsWith('ROW'));
+        return { output: rows.join('\n'), error: null };
+      }
+    }
+    return { output: String(content), error: null };
+  }
+
+  if (command === 'openssl') {
+    const decrypt = args.includes('-decrypt');
+    const inkeyFlag = args.indexOf('-inkey');
+    const inFlag = args.indexOf('-in');
+    
+    const keyFile = inkeyFlag !== -1 ? args[inkeyFlag + 1] : null;
+    const encryptedFile = inFlag !== -1 ? args[inFlag + 1] : null;
+    
+    if (decrypt && keyFile && encryptedFile) {
+      const resolvedKey = resolvePath(keyFile);
+      const resolvedEnc = resolvePath(encryptedFile);
+      const keyContent = getFileSystemItem(resolvedKey);
+      const encContent = getFileSystemItem(resolvedEnc);
+      if (!keyContent || !encContent) {
+        return { output: '', error: 'openssl: files not found' };
+      }
+      return { output: ch.password || 'Decrypted successfully', error: null };
+    }
+    return { output: 'openssl: command execution simulated', error: null };
+  }
+
+  if (command === 'dd') {
+    const ifFlag = args.find(a => a.startsWith('if='));
+    const bsFlag = args.find(a => a.startsWith('bs='));
+    const skipFlag = args.find(a => a.startsWith('skip='));
+    const countFlag = args.find(a => a.startsWith('count='));
+    
+    const targetFile = ifFlag ? ifFlag.substring(3) : null;
+    const skip = skipFlag ? parseInt(skipFlag.substring(5)) : 0;
+    const count = countFlag ? parseInt(countFlag.substring(6)) : 0;
+    
+    if (!targetFile) {
+      return { output: '', error: 'dd: input file required' };
+    }
+    
+    const resolved = resolvePath(targetFile);
+    const content = getFileSystemItem(resolved);
+    if (!content) {
+      return { output: '', error: `dd: ${targetFile}: No such file or directory` };
+    }
+    
+    if (String(content).includes('[BINARY:')) {
+      const offsetHex = '0x' + skip.toString(16).toUpperCase();
+      if (String(content).includes(`offset ${offsetHex}`)) {
+        return { output: ch.password || 'Extracted content', error: null };
+      }
+    }
+    return { output: String(content).substring(skip, skip + count), error: null };
+  }
+
+  if (command === 'dig' || command === 'nslookup' || command === 'host') {
+    const query = args.find(a => !a.startsWith('@') && !a.startsWith('-'));
+    if (query) {
+      if (query.includes('challenge.local') || query.includes('localhost')) {
+        return { output: `TXT record: "${ch.password}"`, error: null };
+      }
+    }
+    return { output: 'No records found', error: null };
+  }
+
+  if (command === 'dmesg') {
+    return { output: `[    0.000000] Booting Linux... \n[    1.203841] EXT4-fs (sda1): mounted filesystem.\n[   10.428491] password found: ${ch.password}`, error: null };
+  }
+
+  if (command === 'ps') {
+    return { output: `PID TTY          TIME CMD\n 124 pts/0    00:00:00 bash\n 582 pts/0    00:00:01 my_cron_job.sh\n 942 pts/0    00:00:00 ps`, error: null };
+  }
+
+  if (command === 'crontab') {
+    return { output: `* * * * * /home/user/my_cron_job.sh\n# Cron schedule simulated successfully`, error: null };
+  }
+
+  if (command === 'getfattr' || command === 'md5sum' || command === 'sha256sum') {
     return { output: `Output: ${ch.password}`, error: null };
   }
 
@@ -1147,11 +1682,43 @@ function removeFromVirtualFS(path) {
   delete current[targetName + '/'];
 }
 
-// ---- Filesystem Helpers ----
-function navigateFS(fs, path) {
-  const parts = path.replace(/^\.\//, '').split('/').filter(Boolean);
-  let current = fs;
+// ---- Filesystem Path Resolution & Helpers ----
+function resolvePath(path) {
+  if (!path) return state.currentDir;
+  if (path === '~' || path === '/') return '';
+  if (path.startsWith('~/')) {
+    path = path.substring(2);
+  }
+  
+  let base = state.currentDir;
+  if (path.startsWith('/')) {
+    base = '';
+    path = path.substring(1);
+  }
+  
+  const parts = path.split('/').filter(Boolean);
+  let resolvedParts = base ? base.split('/').filter(Boolean) : [];
+  
   for (const part of parts) {
+    if (part === '..') {
+      resolvedParts.pop();
+    } else if (part === '.') {
+      // do nothing
+    } else {
+      resolvedParts.push(part);
+    }
+  }
+  return resolvedParts.join('/');
+}
+
+function getFileSystemItem(resolvedPath) {
+  const fs = state.activeFilesystem || {};
+  if (!resolvedPath) return fs;
+  
+  const parts = resolvedPath.split('/');
+  let current = fs;
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
     if (current[part] !== undefined) {
       current = current[part];
     } else if (current[part + '/'] !== undefined) {
@@ -1163,12 +1730,14 @@ function navigateFS(fs, path) {
   return current;
 }
 
+function navigateFS(fs, path) {
+  const resolved = resolvePath(path);
+  return getFileSystemItem(resolved);
+}
+
 function findInFS(fs, path) {
-  const cleanPath = path.replace(/^\.\//, '').replace(/['"]/g, '');
-  // Direct lookup
-  if (fs[cleanPath] !== undefined) return fs[cleanPath];
-  // Navigate path
-  return navigateFS(fs, cleanPath);
+  const resolved = resolvePath(path);
+  return getFileSystemItem(resolved);
 }
 
 function flattenFS(fs, prefix) {
@@ -1386,12 +1955,35 @@ function getPromptText() {
   const cat = state.currentCategory;
   const cfg = CATEGORY_CONFIG[cat];
   const level = state.currentChallenge ? state.currentChallengeIndex + 1 : 0;
+  if (cat === 'bandit') {
+    return `<span class="terminal-prompt-user">${cfg.terminalPrompt}</span><span class="terminal-prompt-at">@</span><span class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~/level${level}${state.currentDir ? '/' + state.currentDir : ''}</span><span class="terminal-prompt-dollar">$</span>`;
+  }
   return `<span class="terminal-prompt-user">${cfg.terminalPrompt}</span><span class="terminal-prompt-at">@</span><span class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~/level${level}</span><span class="terminal-prompt-dollar">$</span>`;
 }
 
 function updatePrompt(category) {
-  const cfg = CATEGORY_CONFIG[category || state.currentCategory];
-  DOM.terminalTitle.textContent = `${cfg.terminalPrompt}@challenge:~$`;
+  const cat = category || state.currentCategory;
+  const cfg = CATEGORY_CONFIG[cat];
+  const level = state.currentChallenge ? state.currentChallengeIndex + 1 : 0;
+  
+  let promptHtml = '';
+  if (cat === 'bandit') {
+    promptHtml = `<span class="terminal-prompt-user">${cfg.terminalPrompt}</span><span class="terminal-prompt-at">@</span><span class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~/level${level}${state.currentDir ? '/' + state.currentDir : ''}</span><span class="terminal-prompt-dollar">$ </span>`;
+  } else {
+    promptHtml = `<span class="terminal-prompt-user">${cfg.terminalPrompt}</span><span class="terminal-prompt-at">@</span><span class="terminal-prompt-host">challenge</span><span class="terminal-prompt-path">:~/level${level}</span><span class="terminal-prompt-dollar">$ </span>`;
+  }
+  
+  if (DOM.terminalPrompt) {
+    DOM.terminalPrompt.innerHTML = promptHtml;
+  }
+  
+  if (DOM.terminalTitle) {
+    if (cat === 'bandit') {
+      DOM.terminalTitle.textContent = `${cfg.terminalPrompt}@challenge:~/level${level}${state.currentDir ? '/' + state.currentDir : ''}$`;
+    } else {
+      DOM.terminalTitle.textContent = `${cfg.terminalPrompt}@challenge:~/level${level}$`;
+    }
+  }
 }
 
 function showHelp() {
