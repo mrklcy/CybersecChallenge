@@ -1160,7 +1160,7 @@ const CHALLENGES = {
       description: 'The password in "backwards.txt" is written in reverse. Flip it.',
       objective: 'Reverse string content.',
       hints: ['rev reverses characters.', 'cat backwards.txt | rev'],
-      password: 'S3cur1tyR0ck5',
+      password: 'S3cur1yR0ck5',
       solutions: ['cat backwards.txt | rev', 'rev backwards.txt'],
       filesystem: {
         'backwards.txt': '5kc0Ry1ruc3S'
@@ -1222,7 +1222,7 @@ const CHALLENGES = {
       description: 'The password is the MD5 hash of the word "cybersecurity". Generate it.',
       objective: 'Create MD5 hashes.',
       hints: ['echo -n avoids trailing newline.', 'Pipe to md5sum.'],
-      password: '2f9c81c01a8e0b3f1c88ef67e6acb305',
+      password: 'b03a894e101746d09277f1f255cc8a40',
       solutions: ['echo -n "cybersecurity" | md5sum', "echo -n 'cybersecurity' | md5sum", 'echo -n cybersecurity | md5sum'],
       filesystem: {
         'instructions.txt': 'The password is the MD5 hash of the word: cybersecurity\nUse echo -n to avoid trailing newline before hashing.'
@@ -1461,7 +1461,7 @@ const CHALLENGES = {
       password: 'MASTEROFCRYPTO',
       solutions: ["python3 -c \"..Vigenere decode..\"", 'cat cipher.txt'],
       filesystem: {
-        'cipher.txt': 'FTRXIKHYUKLGBH',
+        'cipher.txt': 'FEJFMEOQVVPBBB',
         'key.txt': 'The Vigenère key is: TERMINAL'
       },
       successMessage: '🔤 Vigenère cipher broken!'
@@ -1690,7 +1690,7 @@ const CHALLENGES = {
       description: 'The password is stored as hexadecimal values in "hex.txt". Convert it to ASCII.',
       objective: 'Convert hex to ASCII text.',
       hints: ['xxd -r -p converts hex to binary.', 'cat hex.txt | xxd -r -p'],
-      password: 'rT4kN7mQ2wL8yP5x',
+      password: 'rT4kN7mQ2wL8yP5z',
       solutions: ['cat hex.txt | xxd -r -p', 'xxd -r -p hex.txt'],
       filesystem: {
         'hex.txt': '7254346b4e376d5132774c387950357a',
@@ -1854,7 +1854,7 @@ const CHALLENGES = {
       description: 'The password has been base64 encoded twice. Decode it twice to reveal the real password.',
       objective: 'Handle chained encodings.',
       hints: ['Decode base64 once, then decode the result again.', 'base64 -d | base64 -d'],
-      password: 'qR8kN5mQ3wT7yL4v',
+      password: 'qB8kR5mQ3wT7yL4v',
       solutions: ['cat double_encoded.txt | base64 -d | base64 -d', 'base64 -d double_encoded.txt | base64 -d'],
       filesystem: {
         'double_encoded.txt': 'Y1VJNGExSTFiVkV6ZDFRM2VVdzBkZz09',
@@ -1950,7 +1950,7 @@ const CHALLENGES = {
       password: 'qK4nR7mT2wL5yP8v',
       solutions: ['base32 -d encoded32.txt', 'cat encoded32.txt | base32 -d'],
       filesystem: {
-        'encoded32.txt': 'OFIXG43JN5WHMZJAMFWGY2LPNYQHI2DFMM======',
+        'encoded32.txt': 'OFFTI3SSG5WVIMTXJQ2XSUBYOY======',
         'hint.txt': 'Not base64... try base32!'
       },
       successMessage: '🔓 Base32 decoded!'
@@ -2102,7 +2102,7 @@ const CHALLENGES = {
       description: 'The password is encoded in Morse code in "morse.txt". Decode it.',
       objective: 'Decode Morse code messages.',
       hints: ['Each letter is separated by spaces, words by |.', 'Use an online decoder or write a script.'],
-      password: 'HACKTHEPLANET',
+      password: 'HACK THE PLANET',
       solutions: ['cat morse.txt'],
       filesystem: {
         'morse.txt': '.... .- -.-. -.- | - .... . | .--. .-.. .- -. . -',

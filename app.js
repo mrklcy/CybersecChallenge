@@ -506,9 +506,10 @@ function checkUnlockPassword(password) {
   // Exact match check
   let isCorrect = password === prevChallenge.password;
 
-  // Lookalike-tolerant, case-insensitive fallback check
+  // Lookalike-tolerant, case-insensitive, whitespace-insensitive fallback check
   if (!isCorrect) {
-    const clean = (str) => str.toLowerCase().trim()
+    const clean = (str) => str.toLowerCase()
+      .replace(/\s+/g, '')
       .replace(/l/g, '1')
       .replace(/i/g, '1')
       .replace(/o/g, '0');
@@ -615,6 +616,17 @@ function processCTFChallenge(cmd) {
 
 // ---- Simulate Bandit Commands ----
 function simulateBanditCommand(cmd, ch) {
+  // If the command is or includes one of the official solutions, directly reveal the password!
+  const normalizedCmd = cmd.trim().toLowerCase().replace(/\s+/g, ' ');
+  const matchedSolution = ch.solutions && ch.solutions.some(sol => {
+    const normSol = sol.trim().toLowerCase().replace(/\s+/g, ' ');
+    return normalizedCmd === normSol || normalizedCmd.includes(normSol) || normSol.includes(normalizedCmd);
+  });
+  if (matchedSolution) {
+    addTerminalLine(ch.password, 'success-line');
+    return;
+  }
+
   const parts = cmd.trim().split(/\s+/);
   const command = parts[0].toLowerCase();
   const args = parts.slice(1).join(' ').replace(/['"]/g, '');
